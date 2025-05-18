@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head><meta charset="UTF-8"><title>外送測試</title></head>
+<body>
+  <form id="form">
+    <input type="text" id="text" placeholder="輸入內容">
+    <button type="submit">送出</button>
+  </form>
+  <script>
+    document.getElementById('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = document.getElementById('text').value;
+      await fetch('http://localhost:3000/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: text })
+      });
+    });
+  </script>
+</body>
+</html>

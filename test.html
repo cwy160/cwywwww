@@ -1,21 +1,23 @@
 <!DOCTYPE html>
 <html lang="zh">
-<head><meta charset="UTF-8"><title>外送測試</title></head>
+<head>
+  <meta charset="UTF-8">
+  <title>三馬達控制介面</title>
+</head>
 <body>
-  <form id="form">
-    <input type="text" id="text" placeholder="輸入內容">
-    <button type="submit">送出</button>
-  </form>
+  <h1>選擇要觸發的馬達</h1>
+  <button onclick="sendCommand('motor1')">馬達 1</button>
+  <button onclick="sendCommand('motor2')">馬達 2</button>
+  <button onclick="sendCommand('motor3')">馬達 3</button>
+
   <script>
-    document.getElementById('form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const text = document.getElementById('text').value;
-      await fetch('http://localhost:3000/send', {
+    async function sendCommand(command) {
+      await fetch('https://cwywwww.onrender.com/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: text })
+        body: JSON.stringify({ data: command })
       });
-    });
+    }
   </script>
 </body>
 </html>

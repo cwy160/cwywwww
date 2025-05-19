@@ -2,13 +2,16 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>三馬達控制介面</title>
+  <title>六馬達控制介面</title>
 </head>
 <body>
   <h1>選擇要觸發的馬達</h1>
   <button onclick="sendCommand('motor1')">馬達 1</button>
   <button onclick="sendCommand('motor2')">馬達 2</button>
   <button onclick="sendCommand('motor3')">馬達 3</button>
+  <button onclick="sendCommand('motor4')">馬達 4</button>
+  <button onclick="sendCommand('motor5')">馬達 5</button>
+  <button onclick="sendCommand('motor6')">馬達 6</button>
 
   <script>
     async function sendCommand(command) {

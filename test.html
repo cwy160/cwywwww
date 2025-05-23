@@ -2,29 +2,150 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>10 顆馬達控制面板</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>偽外送平台</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 1rem; background: #fefefe; }
+    h1 { font-size: 1.5rem; text-align: center; margin-bottom: 1rem; }
+    .menu { display: flex; flex-direction: column; gap: 1rem; max-width: 600px; margin: 0 auto; }
+    .section {
+      padding: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #fff;
+      transition: background 0.3s;
+    }
+    .section.locked {
+      background: #f0f0f0;
+      color: #999;
+    }
+    .section .label {
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    .section.locked .label::after {
+      content: "（已售罄，請稍待補貨）";
+      font-size: 0.9rem;
+      color: red;
+      margin-left: 0.5rem;
+    }
+    .details {
+      display: none;
+      margin-top: 1rem;
+      flex-direction: column;
+    }
+    .active .details { display: flex; }
+    .details button {
+      margin-top: 0.5rem;
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+    .locked-message {
+      color: red;
+      font-weight: bold;
+      margin-top: 1rem;
+    }
+    .back-button {
+      margin-top: 1rem;
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+    @media (max-width: 500px) {
+      .section { font-size: 0.95rem; }
+      .details button, .back-button { font-size: 0.95rem; padding: 0.4rem; }
+    }
+  </style>
 </head>
 <body>
-  <h1>選擇要觸發的馬達</h1>
-
-  <button onclick="sendCommand('motor1')">馬達 1</button>
-  <button onclick="sendCommand('motor2')">馬達 2</button>
-  <button onclick="sendCommand('motor3')">馬達 3</button>
-  <button onclick="sendCommand('motor4')">馬達 4</button>
-  <button onclick="sendCommand('motor5')">馬達 5</button>
-  <button onclick="sendCommand('motor6')">馬達 6</button>
-  <button onclick="sendCommand('motor7')">馬達 7</button>
-  <button onclick="sendCommand('motor8')">馬達 8</button>
-  <button onclick="sendCommand('motor9')">馬達 9</button>
-  <button onclick="sendCommand('motor10')">馬達 10</button>
+  <h1>外送系統</h1>
+  <div id="menu" class="menu"></div>
 
   <script>
-    async function sendCommand(command) {
-      await fetch('https://cwywwww.onrender.com/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: command })
+    const menuData = {
+      火山豆腐: { motor: 'motor1', options: ['小辣', '中辣', '大辣'] },
+      青檸茶: { motor: 'motor2', options: ['微糖', '半糖', '全糖'] },
+      左旋電波: { motor: 'motor3', options: ['冰', '熱'] },
+      粒子豆腐: { motor: 'motor4', options: ['附湯', '不附湯'] }
+    };
+
+    const lockStatus = {}; // 記錄每個 motor 是否鎖定
+    const menuDiv = document.getElementById('menu');
+
+    async function syncLockStatus() {
+      try {
+        const res = await fetch('https://cwywwww.onrender.com/status');
+        const data = await res.json();
+        Object.assign(lockStatus, data);
+        updateLockUI();
+      } catch (e) {
+        console.error('同步狀態失敗', e);
+      }
+    }
+
+    setInterval(syncLockStatus, 1000);
+
+    Object.entries(menuData).forEach(([label, data]) => {
+      const section = document.createElement('div');
+      section.className = 'section';
+      section.dataset.motor = data.motor;
+      section.innerHTML = `<div class="label">${label}</div>
+        <div class="details">
+          <div class="item-buttons">
+            ${data.options.map(i => `<button class="order-btn" data-motor="${data.motor}" onclick="sendOrder('${data.motor}')">${i}</button>`).join('')}
+          </div>
+          <div class="locked-message" style="display:none;">該選項已售罄，請稍後補貨</div>
+          <button class="back-button" onclick="goBack()">返回上一頁</button>
+        </div>`;
+
+      section.addEventListener('click', () => {
+        if (lockStatus[data.motor]) return;
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        section.classList.add('active');
       });
+
+      menuDiv.appendChild(section);
+    });
+
+    async function sendOrder(motorKey) {
+  if (lockStatus[motorKey]) return;
+
+  lockStatus[motorKey] = true;
+  updateLockUI();         // ✅ 馬上更新畫面
+  goBack();               // ✅ 自動跳回主頁面
+
+  await fetch('https://cwywwww.onrender.com/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data: motorKey })
+  });
+}
+
+
+    function updateLockUI() {
+      document.querySelectorAll('.section').forEach(section => {
+        const motorKey = section.dataset.motor;
+        const isLocked = lockStatus[motorKey];
+        const label = section.querySelector('.label');
+        const lockedMessage = section.querySelector('.locked-message');
+        const buttons = section.querySelectorAll('.order-btn');
+        const backButton = section.querySelector('.back-button');
+
+        if (isLocked) {
+          section.classList.add('locked');
+          if (lockedMessage) lockedMessage.style.display = 'block';
+          buttons.forEach(btn => btn.style.display = 'none');
+          if (backButton) backButton.style.display = 'inline-block';
+        } else {
+          section.classList.remove('locked');
+          if (lockedMessage) lockedMessage.style.display = 'none';
+          buttons.forEach(btn => btn.style.display = 'inline-block');
+          if (backButton) backButton.style.display = 'none';
+        }
+      });
+    }
+
+    function goBack() {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     }
   </script>
 </body>

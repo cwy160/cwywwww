@@ -1,177 +1,70 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>偽外送平台</title>
   <style>
     body { font-family: sans-serif; margin: 0; padding: 1rem; background: #fefefe; }
     h1 { font-size: 1.5rem; text-align: center; margin-bottom: 1rem; }
     .menu { display: flex; flex-direction: column; gap: 1rem; max-width: 600px; margin: 0 auto; }
-    .section {
-      padding: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background: #fff;
-      transition: background 0.3s;
-    }
-    .section.locked {
-      background: #f0f0f0;
-      color: #999;
-    }
-    .section .label {
-      font-weight: bold;
-      font-size: 1.1rem;
-    }
-    .section.locked .label::after {
-      content: "（已售罄，請稍待補貨）";
-      font-size: 0.9rem;
-      color: red;
-      margin-left: 0.5rem;
-    }
-    .details {
-      display: none;
-      margin-top: 1rem;
-      flex-direction: column;
-    }
+    .section { padding: 1rem; border: 1px solid #ccc; border-radius: 8px; background: #fff; transition: background 0.3s; }
+    .section.locked { background: #f0f0f0; color: #999; }
+    .section.locked .label::after { content: "（已售罄，請稍待補貨）"; font-size: 0.9rem; color: red; margin-left: 0.5rem; }
+    .details { display: none; margin-top: 1rem; flex-direction: column; }
     .active .details { display: flex; }
-    .details button {
-      margin-top: 0.5rem;
-      padding: 0.5rem;
-      font-size: 1rem;
+    .details button { margin-top: 0.5rem; padding: 0.5rem; font-size: 1rem; }
+    .locked-message { color: red; font-weight: bold; margin-top: 1rem; }
+    .back-button { margin-top: 1rem; padding: 0.5rem; font-size: 1rem; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
+    .cell { width: 60px; height: 60px; border: 2px solid black; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+    .cell.active { background-color: red; color: white; }
+    #arrow { width: 30px; height: 30px; border: 10px solid transparent; border-top: 20px solid blue; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(0deg); z-index: 10; }
+    @media (max-width: 500px) {
+      .section { font-size: 0.95rem; }
+      .details button, .back-button { font-size: 0.95rem; padding: 0.4rem; }
     }
-    .locked-message {
-      color: red;
-      font-weight: bold;
-      margin-top: 1rem;
-    }
-    .back-button {
-      margin-top: 1rem;
-      padding: 0.5rem;
-      font-size: 1rem;
-    }
-    #map, #grid, #delivered, #thanks { display: none; text-align: center; }
-    #map {
-      height: 300px;
-      background: linear-gradient(#e0f7fa, #b2ebf2);
-      position: relative;
-      overflow: hidden;
-    }
-    #courier {
-      width: 20px; height: 20px; border-radius: 50%; background: red;
-      position: absolute; top: 10px; left: 10px; transition: all 10s linear;
-    }
-    #user {
-      width: 20px; height: 20px; border-radius: 50%; background: blue;
-      position: absolute; top: 150px; left: 150px;
-    }
-    #arrow {
-      width: 0; height: 0; border-left: 10px solid transparent;
-      border-right: 10px solid transparent; border-bottom: 20px solid black;
-      position: absolute; top: 140px; left: 155px;
-      transform-origin: center bottom;
-      transition: transform 0.1s linear;
-    }
-    #grid table { width: 100%; max-width: 300px; margin: 1rem auto; border-collapse: collapse; }
-    #grid td {
-      width: 25%; height: 50px;
-      border: 1px solid #000;
-      text-align: center;
-      vertical-align: middle;
-      background: #fff;
-    }
-    #grid .highlight { background: red; color: white; }
-    button.confirm { margin-top: 1rem; font-size: 1rem; padding: 0.5rem 1rem; }
   </style>
 </head>
 <body>
   <h1>外送系統</h1>
   <div id="arrow"></div>
   <div id="menu" class="menu"></div>
-
-  <div id="map">
-    <div id="courier"></div>
-    <div id="user"></div>
-    <div id="arrow"></div>
-    <p>外送員正在前往您所在位置...</p>
+  <div id="map" style="display:none; height: 300px; background: #ccc; position: relative;">
+    <div id="courier" style="width: 30px; height: 30px; background: black; border-radius: 50%; position: absolute;"></div>
   </div>
-
-  <div id="delivered">
-    <p>您的餐點已送達！</p>
-    <button class="confirm" onclick="confirmDelivery()">確認收餐</button>
+  <div id="delivered" style="display:none; text-align:center;">
+    <p>您的餐點已送達</p>
+    <button onclick="confirmDelivery()">確認收餐</button>
   </div>
-  <div id="grid">
-    <table id="gridTable"></table>
-    <p id="pickupText">請查收您的餐點，取餐位置為：</p>
-  </div>
-  <div id="thanks">
-    <p>謝謝您的購買！</p>
-    <button class="confirm" onclick="goBackHome()">回首頁</button>
+  <div id="final" style="display:none; text-align:center;">
+    <div id="grid" class="grid"></div>
+    <p id="locationText"></p>
+    <button onclick="goHome()">回首頁</button>
   </div>
 
   <script>
-    // 定位與方向偵測
-    function startGeoTracking() {
-      navigator.geolocation.watchPosition(pos => {
-        const user = document.getElementById('user');
-        const arrow = document.getElementById('arrow');
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        // 假設中心座標 → 定點繪製即可（示意）
-        user.style.left = '150px';
-        user.style.top = '150px';
-        arrow.style.left = '155px';
-        arrow.style.top = '140px';
-      });
-
-      if (window.DeviceOrientationEvent) {
-        window.addEventListener('deviceorientation', e => {
-          const angle = e.alpha; // 使用 alpha 作為方向（順時針 0~360）
-          const arrow = document.getElementById('arrow');
-          if (angle != null) {
-            arrow.style.transform = `rotate(${angle}deg)`;
-          }
-        });
-      }
-    }
-
-    const menuData = {
-      火山豆腐: [
-        { label: '小辣', motor: 'motor1' },
-        { label: '中辣', motor: 'motor2' },
-        { label: '大辣', motor: 'motor3' }
-      ],
-      青檸茶: [
-        { label: '微糖', motor: 'motor1' },
-        { label: '半糖', motor: 'motor2' },
-        { label: '全糖', motor: 'motor4' }
-      ],
-      粒子豆腐: [
-        { label: '附湯', motor: 'motor3' },
-        { label: '不附湯', motor: 'motor2' }
-      ]
-    };
+    const menuData = [
+      { section: "主食", items: [
+        { label: "小辣", motor: "motor1" },
+        { label: "中辣", motor: "motor2" },
+        { label: "大辣", motor: "motor3" }
+      ]},
+      { section: "飲料", items: [
+        { label: "無糖", motor: "motor2" },
+        { label: "微糖", motor: "motor1" },
+        { label: "全糖", motor: "motor3" }
+      ]}
+    ];
 
     const lockStatus = {};
     const menuDiv = document.getElementById('menu');
     let selectedMotor = '';
 
-    async function syncLockStatus() {
-      try {
-        const res = await fetch('https://cwywwww.onrender.com/status');
-        const data = await res.json();
-        Object.assign(lockStatus, data);
-        updateLockUI();
-      } catch (e) {
-        console.error('同步狀態失敗', e);
-      }
-    }
-    setInterval(syncLockStatus, 1000);
-
-    Object.entries(menuData).forEach(([label, items]) => {
-      const section = document.createElement('div');
-      section.className = 'section';
-      section.innerHTML = `<div class="label">${label}</div>
+    menuData.forEach(({ section, items }) => {
+      const container = document.createElement('div');
+      container.className = 'section';
+      container.innerHTML = `<div class="label">${section}</div>
         <div class="details">
           <div class="item-buttons">
             ${items.map(i => `<button class="order-btn" data-motor="${i.motor}" onclick="prepareDelivery('${i.motor}')">${i.label}</button>`).join('')}
@@ -179,12 +72,12 @@
           <div class="locked-message" style="display:none;">該選項已售罄，請稍後補貨</div>
           <button class="back-button" onclick="goBack()">返回上一頁</button>
         </div>`;
-      section.addEventListener('click', () => {
-        if (items.every(i => lockStatus[i.motor])) return;
+      container.addEventListener('click', () => {
+        if (container.classList.contains('locked')) return;
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        section.classList.add('active');
+        container.classList.add('active');
       });
-      menuDiv.appendChild(section);
+      menuDiv.appendChild(container);
     });
 
     function prepareDelivery(motorKey) {
@@ -192,7 +85,6 @@
       selectedMotor = motorKey;
       lockStatus[motorKey] = true;
       updateLockUI();
-      goBack();
 
       setTimeout(() => {
         lockStatus[motorKey] = false;
@@ -213,58 +105,21 @@
       }, 10000);
     }
 
-    async function confirmDelivery() {
-      document.getElementById('delivered').style.display = 'none';
-      showGrid(selectedMotor);
-      await fetch('https://cwywwww.onrender.com/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: selectedMotor })
-      });
-    }
-
-    function showGrid(motorKey) {
-      const table = document.getElementById('gridTable');
-      table.innerHTML = '';
-      const pos = parseInt(motorKey.replace('motor', ''));
-      const row = Math.floor((pos - 1) / 4) + 1;
-      const col = ((pos - 1) % 4) + 1;
-      for (let r = 1; r <= 4; r++) {
-        const tr = document.createElement('tr');
-        for (let c = 1; c <= 4; c++) {
-          const td = document.createElement('td');
-          if (r === row && c === col) td.className = 'highlight';
-          td.textContent = `${r}-${c}`;
-          tr.appendChild(td);
-        }
-        table.appendChild(tr);
-      }
-      document.getElementById('pickupText').textContent = `請查收您的餐點，取餐位置為：${row}-${col}`;
-      document.getElementById('grid').style.display = 'block';
-      setTimeout(() => {
-        document.getElementById('grid').style.display = 'none';
-        document.getElementById('thanks').style.display = 'block';
-      }, 7000);
-    }
-
     function updateLockUI() {
+      document.querySelectorAll('.order-btn').forEach(btn => {
+        const motor = btn.dataset.motor;
+        if (lockStatus[motor]) {
+          btn.style.display = 'none';
+        } else {
+          btn.style.display = 'inline-block';
+        }
+      });
+
       document.querySelectorAll('.section').forEach(section => {
-        const buttons = section.querySelectorAll('.order-btn');
+        const anyLocked = Array.from(section.querySelectorAll('.order-btn')).some(btn => lockStatus[btn.dataset.motor]);
         const lockedMessage = section.querySelector('.locked-message');
         const backButton = section.querySelector('.back-button');
-
-        let allLocked = true;
-        buttons.forEach(btn => {
-          const motorKey = btn.dataset.motor;
-          if (lockStatus[motorKey]) {
-            btn.style.display = 'none';
-          } else {
-            btn.style.display = 'inline-block';
-            allLocked = false;
-          }
-        });
-
-        if (allLocked) {
+        if (anyLocked) {
           section.classList.add('locked');
           if (lockedMessage) lockedMessage.style.display = 'block';
           if (backButton) backButton.style.display = 'inline-block';
@@ -276,13 +131,58 @@
       });
     }
 
+    async function confirmDelivery() {
+      document.getElementById('delivered').style.display = 'none';
+      showGrid(selectedMotor);
+      await fetch('https://cwywwww.onrender.com/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: selectedMotor })
+      });
+    }
+
+    function showGrid(motor) {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      let pos = parseInt(motor.replace('motor', '')) - 1;
+      for (let i = 0; i < 16; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.textContent = `${Math.floor(i / 4) + 1}-${i % 4 + 1}`;
+        if (i === pos) cell.classList.add('active');
+        grid.appendChild(cell);
+      }
+      document.getElementById('final').style.display = 'block';
+      document.getElementById('locationText').textContent = `請查收您的餐點，取餐位置為 ${Math.floor(pos / 4) + 1}-${pos % 4 + 1}`;
+    }
+
     function goBack() {
       document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     }
 
-    function goBackHome() {
-      document.getElementById('thanks').style.display = 'none';
+    function goHome() {
+      document.getElementById('final').style.display = 'none';
       document.getElementById('menu').style.display = 'block';
+    }
+
+    function startGeoTracking() {
+      if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission().then(permissionState => {
+          if (permissionState === 'granted') {
+            window.addEventListener('deviceorientation', handleOrientation, true);
+          }
+        }).catch(console.error);
+      } else {
+        window.addEventListener('deviceorientation', handleOrientation, true);
+      }
+    }
+
+    function handleOrientation(event) {
+      const arrow = document.getElementById('arrow');
+      if (arrow && typeof event.alpha === 'number') {
+        const angle = event.alpha;
+        arrow.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+      }
     }
   </script>
 </body>

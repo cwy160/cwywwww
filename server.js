@@ -1,48 +1,55 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('public')); // 提供 index.html
+app.use(express.static('public'));
+
 
 let latestData = '';
-let lockState = {}; // motorX: timestamp
+let lockStatus = {
+  motor1: false,
+  motor2: false,
+  motor3: false,
+  motor4: false,
+  motor5: false,
+  motor6: false,
+  motor7: false,
+  motor8: false,
+  motor9: false,
+  motor10: false,
+  motor11: false,
+  motor12: false,
+  motor13: false,
+  motor14: false,
+  motor15: false,
+  motor16: false,
+};
 
-// 接收訊號（從客戶端送來 motorX）
 app.post('/send', (req, res) => {
   const { data } = req.body;
-  if (data) {
-    latestData = data;
-    lockState[data] = Date.now();
-    res.status(200).json({ status: 'ok' });
-  } else {
-    res.status(400).json({ error: 'Missing data' });
-  }
+  console.log('收到指令：', data);
+  latestData = data;
+  lockStatus[data] = true;
+  res.sendStatus(200);
+
+  // 自動解鎖（模擬馬達完成）
+  setTimeout(() => {
+    lockStatus[data] = false;
+    console.log('已解鎖：', data);
+  }, 7000);
 });
 
-// 提供目前最新資料給 Arduino
 app.get('/latest', (req, res) => {
   res.json({ data: latestData });
+  latestData = ''; // 傳送完就清空，避免重複送出
 });
 
-// ✅ 前端會定期輪詢這裡來確認哪些 motorX 被鎖
 app.get('/status', (req, res) => {
-  const now = Date.now();
-  const status = {};
-
-  Object.entries(lockState).forEach(([key, timestamp]) => {
-    if (now - timestamp < 7000) {
-      status[key] = true;
-    } else {
-      status[key] = false;
-    }
-  });
-
-  res.json(status);
+  res.json(lockStatus);
 });
 
 app.listen(port, () => {

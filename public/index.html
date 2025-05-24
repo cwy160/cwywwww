@@ -109,31 +109,6 @@
   </div>
 
   <script>
-    // 定位與方向偵測
-    function startGeoTracking() {
-      navigator.geolocation.watchPosition(pos => {
-        const user = document.getElementById('user');
-        const arrow = document.getElementById('arrow');
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        // 假設中心座標 → 定點繪製即可（示意）
-        user.style.left = '150px';
-        user.style.top = '150px';
-        arrow.style.left = '155px';
-        arrow.style.top = '140px';
-      });
-
-      if (window.DeviceOrientationEvent) {
-        window.addEventListener('deviceorientation', e => {
-          const angle = e.alpha; // 使用 alpha 作為方向（順時針 0~360）
-          const arrow = document.getElementById('arrow');
-          if (angle != null) {
-            arrow.style.transform = `rotate(${angle}deg)`;
-          }
-        });
-      }
-    }
-
     const menuData = {
       熱炒便當: [
         { label: '宮保雞丁', motor: 'motor1' },

@@ -135,36 +135,31 @@
     }
 
     const menuData = {
-      火山豆腐: [
-        { label: '小辣', motor: 'motor1' },
-        { label: '中辣', motor: 'motor2' },
-        { label: '大辣', motor: 'motor3' }
+      熱炒便當: [
+        { label: '宮保雞丁', motor: 'motor1' },
+        { label: '魚香茄子', motor: 'motor2' },
+        { label: '糖醋排骨', motor: 'motor3' },
+        { label: '三杯雞', motor: 'motor4' }
       ],
-      青檸茶: [
-        { label: '微糖', motor: 'motor1' },
-        { label: '半糖', motor: 'motor2' },
-        { label: '全糖', motor: 'motor4' }
+      冰飲系列: [
+        { label: '冬瓜檸檬', motor: 'motor5' },
+        { label: '翡翠檸檬', motor: 'motor6' },
+        { label: '青草茶', motor: 'motor7' },
+        { label: '仙草凍飲', motor: 'motor8' }
       ],
-      粒子豆腐: [
-        { label: '附湯', motor: 'motor3' },
-        { label: '不附湯', motor: 'motor2' }
+      超時空套餐: [
+        { label: '火星漢堡', motor: 'motor9' },
+        { label: '未來餅乾', motor: 'motor10' },
+        { label: '異次元薯條', motor: 'motor11' },
+        { label: '蟲洞燉飯', motor: 'motor12' }
+      ],
+      餃子宇宙: [
+        { label: '平行煎餃', motor: 'motor13' },
+        { label: '對撞湯餃', motor: 'motor14' },
+        { label: '量子蒸餃', motor: 'motor15' },
+        { label: '重力水餃', motor: 'motor16' }
       ]
     };
-
-    const lockStatus = {};
-    const menuDiv = document.getElementById('menu');
-    let selectedMotor = '';
-
-    async function syncLockStatus() {
-      try {
-        const res = await fetch('https://cwywwww.onrender.com/status');
-        const data = await res.json();
-        Object.assign(lockStatus, data);
-        updateLockUI();
-      } catch (e) {
-        console.error('同步狀態失敗', e);
-      }
-    }
     setInterval(syncLockStatus, 1000);
 
     Object.entries(menuData).forEach(([label, items]) => {

@@ -14,8 +14,20 @@ let lockStatus = {
   motor1: false,
   motor2: false,
   motor3: false,
-  motor4: false
-};
+  motor4: false,
+  motor5: false,
+  motor6: false,
+  motor7: false,
+  motor8: false,
+  motor9: false,
+  motor10: false,
+  motor11: false,
+  motor12: false,
+  motor13: false,
+  motor14: false,
+  motor15: false,
+  motor16: false,
+ };
 
 app.post('/send', (req, res) => {
   const { data } = req.body;

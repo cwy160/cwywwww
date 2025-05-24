@@ -135,6 +135,9 @@
         { label: '重力水餃', motor: 'motor16' }
       ]
     };
+    
+    const menuDiv = document.getElementById('menu'); 
+    
     setInterval(syncLockStatus, 1000);
 
     Object.entries(menuData).forEach(([label, items]) => {

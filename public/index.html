@@ -19,7 +19,7 @@
     .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
     .cell { width: 60px; height: 60px; border: 2px solid black; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
     .cell.active { background-color: red; color: white; }
-    #arrow { width: 30px; height: 30px; border: 10px solid transparent; border-top: 20px solid blue; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(0deg); z-index: 10; }
+    #arrow { width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 20px solid blue; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(0deg); display: none; z-index: 10; }
     @media (max-width: 500px) {
       .section { font-size: 0.95rem; }
       .details button, .back-button { font-size: 0.95rem; padding: 0.4rem; }
@@ -81,53 +81,11 @@
     });
 
     function prepareDelivery(motorKey) {
-      if (lockStatus[motorKey]) return;
       selectedMotor = motorKey;
-      lockStatus[motorKey] = true;
-      updateLockUI();
-
-      setTimeout(() => {
-        lockStatus[motorKey] = false;
-        updateLockUI();
-      }, 7000);
-
-      document.getElementById('menu').style.display = 'none';
-      document.getElementById('map').style.display = 'block';
-      startGeoTracking();
-
-      const courier = document.getElementById('courier');
-      courier.style.left = '150px';
-      courier.style.top = '150px';
-
-      setTimeout(() => {
-        document.getElementById('map').style.display = 'none';
-        document.getElementById('delivered').style.display = 'block';
-      }, 10000);
-    }
-
-    function updateLockUI() {
-      document.querySelectorAll('.order-btn').forEach(btn => {
-        const motor = btn.dataset.motor;
-        if (lockStatus[motor]) {
-          btn.style.display = 'none';
-        } else {
-          btn.style.display = 'inline-block';
-        }
-      });
-
-      document.querySelectorAll('.section').forEach(section => {
-        const anyLocked = Array.from(section.querySelectorAll('.order-btn')).some(btn => lockStatus[btn.dataset.motor]);
-        const lockedMessage = section.querySelector('.locked-message');
-        const backButton = section.querySelector('.back-button');
-        if (anyLocked) {
-          section.classList.add('locked');
-          if (lockedMessage) lockedMessage.style.display = 'block';
-          if (backButton) backButton.style.display = 'inline-block';
-        } else {
-          section.classList.remove('locked');
-          if (lockedMessage) lockedMessage.style.display = 'none';
-          if (backButton) backButton.style.display = 'none';
-        }
+      fetch('https://cwywwww.onrender.com/lock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ motor: motorKey })
       });
     }
 
@@ -165,7 +123,44 @@
       document.getElementById('menu').style.display = 'block';
     }
 
-    function startGeoTracking() {
+    async function syncLockStatus() {
+      try {
+        const res = await fetch('https://cwywwww.onrender.com/status');
+        const json = await res.json();
+        Object.assign(lockStatus, json);
+        updateLockUI();
+      } catch (err) {
+        console.log('同步狀態失敗', err);
+      }
+    }
+    setInterval(syncLockStatus, 1000);
+
+    function updateLockUI() {
+      document.querySelectorAll('.order-btn').forEach(btn => {
+        const motor = btn.dataset.motor;
+        btn.disabled = lockStatus[motor];
+        btn.style.opacity = lockStatus[motor] ? '0.4' : '1';
+      });
+
+      document.querySelectorAll('.section').forEach(section => {
+        const anyLocked = Array.from(section.querySelectorAll('.order-btn')).some(btn => lockStatus[btn.dataset.motor]);
+        const lockedMessage = section.querySelector('.locked-message');
+        const backButton = section.querySelector('.back-button');
+        if (anyLocked) {
+          section.classList.add('locked');
+          if (lockedMessage) lockedMessage.style.display = 'block';
+          if (backButton) backButton.style.display = 'inline-block';
+        } else {
+          section.classList.remove('locked');
+          if (lockedMessage) lockedMessage.style.display = 'none';
+          if (backButton) backButton.style.display = 'none';
+        }
+      });
+    }
+
+    function startArrowTracking() {
+      const arrow = document.getElementById('arrow');
+      arrow.style.display = 'block';
       if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
         DeviceOrientationEvent.requestPermission().then(permissionState => {
           if (permissionState === 'granted') {
@@ -180,10 +175,18 @@
     function handleOrientation(event) {
       const arrow = document.getElementById('arrow');
       if (arrow && typeof event.alpha === 'number') {
-        const angle = event.alpha;
-        arrow.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+        arrow.style.transform = `translate(-50%, -50%) rotate(${event.alpha}deg)`;
       }
     }
+
+    const observer = new MutationObserver(() => {
+      if (document.getElementById('map').style.display !== 'none') {
+        startArrowTracking();
+      } else {
+        document.getElementById('arrow').style.display = 'none';
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
   </script>
 </body>
 </html>

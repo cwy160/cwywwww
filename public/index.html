@@ -1,198 +1,162 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>偽外送平台</title>
+  <title>外送平台</title>
   <style>
     body { font-family: sans-serif; margin: 0; padding: 1rem; background: #fff; }
     h1 { text-align: center; }
     .menu { display: flex; flex-direction: column; gap: 1rem; max-width: 600px; margin: auto; }
-    .section { padding: 1rem; border: 1px solid #ccc; border-radius: 8px; background: #f9f9f9; }
-    .section .label { font-weight: bold; }
-    .details { display: none; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
-    .section.active .details { display: flex; }
-    .section.locked { background: #eee; color: #aaa; }
-    .section.locked .label::after { content: "（已售罄）"; color: red; margin-left: 0.5rem; }
-    button { padding: 0.5rem; font-size: 1rem; }
-    button:disabled { background: #ccc; color: #888; }
-    #map, #final { display: none; flex-direction: column; align-items: center; margin-top: 2rem; }
-    #map { height: 200px; justify-content: center; position: relative; }
-    #dot, #arrow { width: 20px; height: 20px; border-radius: 50%; position: absolute; }
-    #dot { background: red; left: 10%; transition: left 0.3s; }
-    #arrow {
-      width: 0; height: 0;
-      border-left: 10px solid transparent;
-      border-right: 10px solid transparent;
-      border-top: 15px solid blue;
-      transform-origin: center;
-    }
-    #grid { display: grid; grid-template-columns: repeat(4, 50px); gap: 5px; margin: 1rem; }
-    .cell {
-      width: 50px; height: 50px;
-      border: 1px solid black;
-      display: flex; align-items: center; justify-content: center;
-      background: white;
-    }
-    .cell.active { background: red; color: white; }
+    .section { border: 1px solid #ccc; border-radius: 8px; padding: 1rem; background: #f9f9f9; }
+    .section.locked { opacity: 0.5; pointer-events: none; }
+    .details { margin-top: 0.5rem; }
+    button { margin: 0.25rem; padding: 0.5rem 1rem; font-size: 1rem; }
+    #map, #final, #thanks { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; }
+    .grid { display: grid; grid-template-columns: repeat(4, 50px); gap: 10px; margin-top: 1rem; }
+    .grid div { width: 50px; height: 50px; border: 2px solid black; display: flex; align-items: center; justify-content: center; }
+    .grid .active { background: red; color: white; font-weight: bold; }
+    #arrow { width: 40px; height: 40px; background: red; clip-path: polygon(50% 0%, 100% 100%, 50% 75%, 0% 100%); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; }
   </style>
 </head>
 <body>
-  <h1>外送平台</h1>
-  <div id="menu" class="menu"></div>
-
-  <div id="map">
-    <div id="dot"></div>
-    <div id="arrow"></div>
-    <p>外送員正在前往您的位置中…</p>
-  </div>
-
-  <div id="final">
-    <div id="grid"></div>
-    <p id="pickupText">請查收您的餐點</p>
-    <button onclick="finishOrder()">回首頁</button>
-  </div>
-
-  <script>
-    const menuData = {
-      熱炒便當: [
-        { label: '宮保雞丁', motor: 'motor1' },
-        { label: '魚香茄子', motor: 'motor2' },
-        { label: '糖醋排骨', motor: 'motor3' },
-        { label: '三杯雞', motor: 'motor4' }
-      ],
-      冰飲系列: [
-        { label: '冬瓜檸檬', motor: 'motor5' },
-        { label: '翡翠檸檬', motor: 'motor6' },
-        { label: '青草茶', motor: 'motor7' },
-        { label: '仙草凍飲', motor: 'motor8' }
-      ],
-      超時空套餐: [
-        { label: '火星漢堡', motor: 'motor9' },
-        { label: '未來餅乾', motor: 'motor10' },
-        { label: '異次元薯條', motor: 'motor11' },
-        { label: '蟲洞燉飯', motor: 'motor12' }
-      ],
-      餃子宇宙: [
-        { label: '平行煎餃', motor: 'motor13' },
-        { label: '對撞湯餃', motor: 'motor14' },
-        { label: '量子蒸餃', motor: 'motor15' },
-        { label: '重力水餃', motor: 'motor16' }
-      ]
-    };
-
-    const lockStatus = {}; // motorX: true/false
-    let selectedMotor = '';
-    let deliveryProgress = 0;
-    let deliveryInterval;
-
-    const menuDiv = document.getElementById('menu');
-    Object.entries(menuData).forEach(([title, items]) => {
-      const section = document.createElement('div');
-      section.className = 'section';
-      section.innerHTML = `<div class="label">${title}</div>
-        <div class="details">
-          ${items.map(i => `<button data-motor="${i.motor}">${i.label}</button>`).join('')}
-        </div>`;
-      section.addEventListener('click', () => section.classList.toggle('active'));
-      menuDiv.appendChild(section);
-    });
-
-    document.querySelectorAll('button[data-motor]').forEach(btn => {
-      btn.addEventListener('click', e => {
-        const motorKey = e.target.dataset.motor;
-        if (lockStatus[motorKey]) return;
-
-        selectedMotor = motorKey;
-        lockStatus[motorKey] = true;
-        updateLockUI();
-
-        document.getElementById('menu').style.display = 'none';
-        document.getElementById('map').style.display = 'flex';
-
-        deliveryProgress = 0;
-        updateMap();
-
-        deliveryInterval = setInterval(() => {
-          deliveryProgress += 10;
-          updateMap();
-          if (deliveryProgress >= 100) {
-            clearInterval(deliveryInterval);
-            document.getElementById('map').style.display = 'none';
-            document.getElementById('final').style.display = 'block';
-            highlightGrid(selectedMotor);
-            document.getElementById('pickupText').innerText =
-              `請查收您的餐點，取餐位置為 ${motorToGrid(selectedMotor)}`;
-            fetch('https://cwywwww.onrender.com/send', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ data: selectedMotor })
-            });
-          }
-        }, 1000);
-
-        setTimeout(() => {
-          lockStatus[motorKey] = false;
-          updateLockUI();
-        }, 7000);
-      });
-    });
-
-    function updateLockUI() {
-      document.querySelectorAll('button[data-motor]').forEach(btn => {
-        const motor = btn.dataset.motor;
-        btn.disabled = lockStatus[motor] || false;
-      });
+<h1>外送平台</h1>
+<div id="menu" class="menu"></div>
+<div id="map"><p>外送員正在前往您的位置...</p><div id="arrow"></div></div>
+<div id="final">
+  <p>您的餐點已送達</p>
+  <button onclick="confirmDelivery()">確認收餐</button>
+</div>
+<div id="thanks">
+  <div class="grid" id="grid"></div>
+  <p id="pickup-text"></p>
+  <p>謝謝您的惠顧</p>
+  <button onclick="goHome()">回首頁</button>
+</div>
+<script>
+const menuData = {
+  group1: [
+    { label: 'A1', motor: 'motor1' },
+    { label: 'A2', motor: 'motor2' },
+    { label: 'A3', motor: 'motor3' },
+    { label: 'A4', motor: 'motor4' }
+  ],
+  group2: [
+    { label: 'B1', motor: 'motor5' },
+    { label: 'B2', motor: 'motor6' },
+    { label: 'B3', motor: 'motor7' },
+    { label: 'B4', motor: 'motor8' }
+  ],
+  group3: [
+    { label: 'C1', motor: 'motor9' },
+    { label: 'C2', motor: 'motor10' },
+    { label: 'C3', motor: 'motor11' },
+    { label: 'C4', motor: 'motor12' }
+  ],
+  group4: [
+    { label: 'D1', motor: 'motor13' },
+    { label: 'D2', motor: 'motor14' },
+    { label: 'D3', motor: 'motor15' },
+    { label: 'D4', motor: 'motor16' }
+  ]
+};
+const lockStatus = {};
+let selectedMotor = '';
+let deliveryInterval = null;
+let deliveryProgress = 0;
+const menu = document.getElementById('menu');
+Object.entries(menuData).forEach(([group, items]) => {
+  const section = document.createElement('div');
+  section.className = 'section';
+  const detailDiv = document.createElement('div');
+  detailDiv.className = 'details';
+  items.forEach(({ label, motor }) => {
+    const btn = document.createElement('button');
+    btn.innerText = label;
+    btn.onclick = () => prepareDelivery(motor);
+    btn.dataset.motor = motor;
+    detailDiv.appendChild(btn);
+  });
+  section.appendChild(document.createElement('div')).innerText = group;
+  section.appendChild(detailDiv);
+  menu.appendChild(section);
+});
+function prepareDelivery(motorKey) {
+  if (lockStatus[motorKey]) return;
+  selectedMotor = motorKey;
+  lockStatus[motorKey] = true;
+  updateLockUI();
+  setTimeout(() => {
+    lockStatus[motorKey] = false;
+    updateLockUI();
+  }, 7000);
+  document.getElementById('menu').style.display = 'none';
+  document.getElementById('map').style.display = 'flex';
+  document.getElementById('arrow').style.display = 'block';
+  deliveryProgress = 0;
+  updateMapPosition();
+  deliveryInterval = setInterval(() => {
+    deliveryProgress += 10;
+    updateMapPosition();
+    if (deliveryProgress >= 100) {
+      clearInterval(deliveryInterval);
+      document.getElementById('map').style.display = 'none';
+      document.getElementById('arrow').style.display = 'none';
+      document.getElementById('final').style.display = 'flex';
     }
-
-    function updateMap() {
-      document.getElementById('dot').style.left = `${10 + deliveryProgress * 0.8}%`;
-    }
-
-    function finishOrder() {
-      document.getElementById('final').style.display = 'none';
-      document.getElementById('menu').style.display = 'flex';
-      document.querySelectorAll('.cell').forEach(cell => cell.classList.remove('active'));
-    }
-
-    function motorToGrid(motor) {
-      const num = parseInt(motor.replace('motor', ''));
-      const row = Math.ceil(num / 4);
-      const col = ((num - 1) % 4) + 1;
-      return `${row}-${col}`;
-    }
-
-    function highlightGrid(motor) {
-      const grid = document.getElementById('grid');
-      grid.innerHTML = '';
-      for (let i = 1; i <= 16; i++) {
-        const div = document.createElement('div');
-        div.className = 'cell';
-        div.textContent = `${Math.ceil(i/4)}-${((i - 1) % 4) + 1}`;
-        if (motor === `motor${i}`) div.classList.add('active');
-        grid.appendChild(div);
+  }, 1000);
+}
+function confirmDelivery() {
+  fetch('https://vber-vhtk.onrender.com/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data: selectedMotor })
+  });
+  document.getElementById('final').style.display = 'none';
+  document.getElementById('thanks').style.display = 'block';
+  drawGrid(selectedMotor);
+}
+function goHome() {
+  document.getElementById('thanks').style.display = 'none';
+  document.getElementById('menu').style.display = 'flex';
+}
+function updateLockUI() {
+  document.querySelectorAll('button[data-motor]').forEach(btn => {
+    const key = btn.dataset.motor;
+    btn.disabled = !!lockStatus[key];
+  });
+}
+function drawGrid(motorKey) {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  const motorNum = parseInt(motorKey.replace('motor', ''));
+  for (let i = 1; i <= 16; i++) {
+    const cell = document.createElement('div');
+    if (i === motorNum) cell.className = 'active';
+    cell.innerText = `${Math.ceil(i / 4)}-${((i - 1) % 4) + 1}`;
+    grid.appendChild(cell);
+  }
+  const text = document.getElementById('pickup-text');
+  text.innerText = `請查收您的餐點，取餐位置為 ${Math.ceil(motorNum / 4)}-${((motorNum - 1) % 4) + 1}`;
+}
+// 📍 顯示方向箭頭功能
+if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
+  document.addEventListener('click', () => {
+    DeviceOrientationEvent.requestPermission().then(state => {
+      if (state === 'granted') {
+        window.addEventListener('deviceorientation', handleOrientation);
       }
-    }
-
-    // ✅ 地圖時才啟動指南針方向
-    if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
-      document.addEventListener('click', () => {
-        DeviceOrientationEvent.requestPermission().then(permission => {
-          if (permission === 'granted') {
-            window.addEventListener('deviceorientation', handleOrientation);
-          }
-        }).catch(console.error);
-      });
-    } else {
-      window.addEventListener('deviceorientation', handleOrientation);
-    }
-
-    function handleOrientation(event) {
-      const arrow = document.getElementById('arrow');
-      if (arrow && typeof event.alpha === 'number' && document.getElementById('map').style.display === 'flex') {
-        arrow.style.transform = `rotate(${event.alpha}deg)`;
-      }
-    }
-  </script>
+    });
+  });
+} else {
+  window.addEventListener('deviceorientation', handleOrientation);
+}
+function handleOrientation(e) {
+  const arrow = document.getElementById('arrow');
+  if (arrow && typeof e.alpha === 'number') {
+    arrow.style.transform = `translate(-50%, -50%) rotate(${e.alpha}deg)`;
+  }
+}
+</script>
 </body>
 </html>

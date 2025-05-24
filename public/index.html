@@ -1,25 +1,20 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>偽外送平台</title>
   <style>
     body { font-family: sans-serif; margin: 0; padding: 1rem; background: #fefefe; }
     h1 { font-size: 1.5rem; text-align: center; margin-bottom: 1rem; }
     .menu { display: flex; flex-direction: column; gap: 1rem; max-width: 600px; margin: 0 auto; }
     .section { padding: 1rem; border: 1px solid #ccc; border-radius: 8px; background: #fff; transition: background 0.3s; }
-    .section.locked { background: #f0f0f0; color: #999; }
-    .section.locked .label::after { content: "（已售罄，請稍待補貨）"; font-size: 0.9rem; color: red; margin-left: 0.5rem; }
     .details { display: none; margin-top: 1rem; flex-direction: column; }
     .active .details { display: flex; }
     .details button { margin-top: 0.5rem; padding: 0.5rem; font-size: 1rem; }
-    .locked-message { color: red; font-weight: bold; margin-top: 1rem; }
     .back-button { margin-top: 1rem; padding: 0.5rem; font-size: 1rem; }
-    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
-    .cell { width: 60px; height: 60px; border: 2px solid black; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
-    .cell.active { background-color: red; color: white; }
-    #arrow { width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 20px solid blue; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(0deg); display: none; z-index: 10; }
+    #map { display: none; height: 200px; background: #ddd; position: relative; overflow: hidden; }
+    #courier { width: 30px; height: 30px; background: black; border-radius: 50%; position: absolute; top: 50%; transform: translateY(-50%); transition: left 1s linear; }
     @media (max-width: 500px) {
       .section { font-size: 0.95rem; }
       .details button, .back-button { font-size: 0.95rem; padding: 0.4rem; }
@@ -28,10 +23,9 @@
 </head>
 <body>
   <h1>外送系統</h1>
-  <div id="arrow"></div>
   <div id="menu" class="menu"></div>
-  <div id="map" style="display:none; height: 300px; background: #ccc; position: relative;">
-    <div id="courier" style="width: 30px; height: 30px; background: black; border-radius: 50%; position: absolute;"></div>
+  <div id="map">
+    <div id="courier"></div>
   </div>
   <div id="delivered" style="display:none; text-align:center;">
     <p>您的餐點已送達</p>
@@ -69,7 +63,6 @@
           <div class="item-buttons">
             ${items.map(i => `<button class="order-btn" data-motor="${i.motor}" onclick="prepareDelivery('${i.motor}')">${i.label}</button>`).join('')}
           </div>
-          <div class="locked-message" style="display:none;">該選項已售罄，請稍後補貨</div>
           <button class="back-button" onclick="goBack()">返回上一頁</button>
         </div>`;
       container.addEventListener('click', () => {
@@ -81,12 +74,30 @@
     });
 
     function prepareDelivery(motorKey) {
+      if (lockStatus[motorKey]) return;
       selectedMotor = motorKey;
+
       fetch('https://cwywwww.onrender.com/lock', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ motor: motorKey })
       });
+
+      document.getElementById('menu').style.display = 'none';
+      document.getElementById('map').style.display = 'block';
+
+      const courier = document.getElementById('courier');
+      courier.style.left = '0%';
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 10;
+        courier.style.left = `${progress}%`;
+        if (progress >= 100) {
+          clearInterval(interval);
+          document.getElementById('map').style.display = 'none';
+          document.getElementById('delivered').style.display = 'block';
+        }
+      }, 1000);
     }
 
     async function confirmDelivery() {
@@ -138,55 +149,11 @@
     function updateLockUI() {
       document.querySelectorAll('.order-btn').forEach(btn => {
         const motor = btn.dataset.motor;
-        btn.disabled = lockStatus[motor];
-        btn.style.opacity = lockStatus[motor] ? '0.4' : '1';
-      });
-
-      document.querySelectorAll('.section').forEach(section => {
-        const anyLocked = Array.from(section.querySelectorAll('.order-btn')).some(btn => lockStatus[btn.dataset.motor]);
-        const lockedMessage = section.querySelector('.locked-message');
-        const backButton = section.querySelector('.back-button');
-        if (anyLocked) {
-          section.classList.add('locked');
-          if (lockedMessage) lockedMessage.style.display = 'block';
-          if (backButton) backButton.style.display = 'inline-block';
-        } else {
-          section.classList.remove('locked');
-          if (lockedMessage) lockedMessage.style.display = 'none';
-          if (backButton) backButton.style.display = 'none';
-        }
+        const isLocked = lockStatus[motor];
+        btn.disabled = isLocked;
+        btn.style.opacity = isLocked ? '0.4' : '1';
       });
     }
-
-    function startArrowTracking() {
-      const arrow = document.getElementById('arrow');
-      arrow.style.display = 'block';
-      if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission().then(permissionState => {
-          if (permissionState === 'granted') {
-            window.addEventListener('deviceorientation', handleOrientation, true);
-          }
-        }).catch(console.error);
-      } else {
-        window.addEventListener('deviceorientation', handleOrientation, true);
-      }
-    }
-
-    function handleOrientation(event) {
-      const arrow = document.getElementById('arrow');
-      if (arrow && typeof event.alpha === 'number') {
-        arrow.style.transform = `translate(-50%, -50%) rotate(${event.alpha}deg)`;
-      }
-    }
-
-    const observer = new MutationObserver(() => {
-      if (document.getElementById('map').style.display !== 'none') {
-        startArrowTracking();
-      } else {
-        document.getElementById('arrow').style.display = 'none';
-      }
-    });
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
   </script>
 </body>
 </html>

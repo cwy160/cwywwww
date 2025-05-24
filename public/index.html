@@ -109,6 +109,31 @@
   </div>
 
   <script>
+    // 定位與方向偵測
+    function startGeoTracking() {
+      navigator.geolocation.watchPosition(pos => {
+        const user = document.getElementById('user');
+        const arrow = document.getElementById('arrow');
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        // 假設中心座標 → 定點繪製即可（示意）
+        user.style.left = '150px';
+        user.style.top = '150px';
+        arrow.style.left = '155px';
+        arrow.style.top = '140px';
+      });
+
+      if (window.DeviceOrientationEvent) {
+        window.addEventListener('deviceorientation', e => {
+          const angle = e.alpha; // 使用 alpha 作為方向（順時針 0~360）
+          const arrow = document.getElementById('arrow');
+          if (angle != null) {
+            arrow.style.transform = `rotate(${angle}deg)`;
+          }
+        });
+      }
+    }
+
     const menuData = {
       火山豆腐: [
         { label: '小辣', motor: 'motor1' },
@@ -222,20 +247,31 @@
     }
 
     function updateLockUI() {
-      document.querySelectorAll('.order-btn').forEach(btn => {
-        const motorKey = btn.dataset.motor;
-        btn.style.display = lockStatus[motorKey] ? 'none' : 'inline-block';
-      });
-
       document.querySelectorAll('.section').forEach(section => {
         const buttons = section.querySelectorAll('.order-btn');
         const lockedMessage = section.querySelector('.locked-message');
         const backButton = section.querySelector('.back-button');
 
-        const allLocked = [...buttons].every(btn => lockStatus[btn.dataset.motor]);
-        section.classList.toggle('locked', allLocked);
-        lockedMessage.style.display = allLocked ? 'block' : 'none';
-        backButton.style.display = allLocked ? 'inline-block' : 'none';
+        let allLocked = true;
+        buttons.forEach(btn => {
+          const motorKey = btn.dataset.motor;
+          if (lockStatus[motorKey]) {
+            btn.style.display = 'none';
+          } else {
+            btn.style.display = 'inline-block';
+            allLocked = false;
+          }
+        });
+
+        if (allLocked) {
+          section.classList.add('locked');
+          if (lockedMessage) lockedMessage.style.display = 'block';
+          if (backButton) backButton.style.display = 'inline-block';
+        } else {
+          section.classList.remove('locked');
+          if (lockedMessage) lockedMessage.style.display = 'none';
+          if (backButton) backButton.style.display = 'none';
+        }
       });
     }
 
@@ -246,37 +282,6 @@
     function goBackHome() {
       document.getElementById('thanks').style.display = 'none';
       document.getElementById('menu').style.display = 'block';
-    }
-
-    function startGeoTracking() {
-      navigator.geolocation.watchPosition(pos => {
-        const user = document.getElementById('user');
-        const arrow = document.getElementById('arrow');
-        user.style.left = '150px';
-        user.style.top = '150px';
-        arrow.style.left = '155px';
-        arrow.style.top = '140px';
-      });
-
-      if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
-        document.addEventListener('click', () => {
-          DeviceOrientationEvent.requestPermission().then(state => {
-            if (state === 'granted') {
-              window.addEventListener('deviceorientation', handleOrientation);
-            }
-          });
-        });
-      } else {
-        window.addEventListener('deviceorientation', handleOrientation);
-      }
-    }
-
-    function handleOrientation(event) {
-      const arrow = document.getElementById('arrow');
-      if (arrow && typeof event.alpha === 'number') {
-        const angle = event.alpha;
-        arrow.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
-      }
     }
   </script>
 </body>

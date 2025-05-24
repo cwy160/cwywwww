@@ -51,8 +51,27 @@
       font-size: 1rem;
     }
     #map, #grid, #delivered, #thanks { display: none; text-align: center; }
-    #map { height: 300px; background: linear-gradient(#e0f7fa, #b2ebf2); position: relative; }
-    #courier { width: 20px; height: 20px; border-radius: 50%; background: red; position: absolute; top: 10px; left: 10px; transition: all 10s linear; }
+    #map {
+      height: 300px;
+      background: linear-gradient(#e0f7fa, #b2ebf2);
+      position: relative;
+      overflow: hidden;
+    }
+    #courier {
+      width: 20px; height: 20px; border-radius: 50%; background: red;
+      position: absolute; top: 10px; left: 10px; transition: all 10s linear;
+    }
+    #user {
+      width: 20px; height: 20px; border-radius: 50%; background: blue;
+      position: absolute; top: 150px; left: 150px;
+    }
+    #arrow {
+      width: 0; height: 0; border-left: 10px solid transparent;
+      border-right: 10px solid transparent; border-bottom: 20px solid black;
+      position: absolute; top: 140px; left: 155px;
+      transform-origin: center bottom;
+      transition: transform 0.1s linear;
+    }
     #grid table { width: 100%; max-width: 300px; margin: 1rem auto; border-collapse: collapse; }
     #grid td {
       width: 25%; height: 50px;
@@ -68,10 +87,14 @@
 <body>
   <h1>外送系統</h1>
   <div id="menu" class="menu"></div>
+
   <div id="map">
     <div id="courier"></div>
+    <div id="user"></div>
+    <div id="arrow"></div>
     <p>外送員正在前往您所在位置...</p>
   </div>
+
   <div id="delivered">
     <p>您的餐點已送達！</p>
     <button class="confirm" onclick="confirmDelivery()">確認收餐</button>
@@ -86,12 +109,48 @@
   </div>
 
   <script>
+    // 定位與方向偵測
+    function startGeoTracking() {
+      navigator.geolocation.watchPosition(pos => {
+        const user = document.getElementById('user');
+        const arrow = document.getElementById('arrow');
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        // 假設中心座標 → 定點繪製即可（示意）
+        user.style.left = '150px';
+        user.style.top = '150px';
+        arrow.style.left = '155px';
+        arrow.style.top = '140px';
+      });
+
+      if (window.DeviceOrientationEvent) {
+        window.addEventListener('deviceorientation', e => {
+          const angle = e.alpha; // 使用 alpha 作為方向（順時針 0~360）
+          const arrow = document.getElementById('arrow');
+          if (angle != null) {
+            arrow.style.transform = `rotate(${angle}deg)`;
+          }
+        });
+      }
+    }
+
     const menuData = {
-      火山豆腐: { motor: 'motor1', options: ['小辣', '中辣', '大辣'] },
-      青檸茶: { motor: 'motor2', options: ['微糖', '半糖', '全糖'] },
-      左旋電波: { motor: 'motor3', options: ['冰', '熱'] },
-      粒子豆腐: { motor: 'motor4', options: ['附湯', '不附湯'] }
+      火山豆腐: [
+        { label: '小辣', motor: 'motor1' },
+        { label: '中辣', motor: 'motor2' },
+        { label: '大辣', motor: 'motor3' }
+      ],
+      青檸茶: [
+        { label: '微糖', motor: 'motor1' },
+        { label: '半糖', motor: 'motor2' },
+        { label: '全糖', motor: 'motor4' }
+      ],
+      粒子豆腐: [
+        { label: '附湯', motor: 'motor3' },
+        { label: '不附湯', motor: 'motor2' }
+      ]
     };
+
     const lockStatus = {};
     const menuDiv = document.getElementById('menu');
     let selectedMotor = '';
@@ -108,21 +167,19 @@
     }
     setInterval(syncLockStatus, 1000);
 
-    Object.entries(menuData).forEach(([label, data]) => {
+    Object.entries(menuData).forEach(([label, items]) => {
       const section = document.createElement('div');
       section.className = 'section';
-      section.dataset.motor = data.motor;
       section.innerHTML = `<div class="label">${label}</div>
         <div class="details">
           <div class="item-buttons">
-            ${data.options.map(i => `<button class="order-btn" data-motor="${data.motor}" onclick="prepareDelivery('${data.motor}')">${i}</button>`).join('')}
+            ${items.map(i => `<button class="order-btn" data-motor="${i.motor}" onclick="prepareDelivery('${i.motor}')">${i.label}</button>`).join('')}
           </div>
           <div class="locked-message" style="display:none;">該選項已售罄，請稍後補貨</div>
           <button class="back-button" onclick="goBack()">返回上一頁</button>
         </div>`;
-
       section.addEventListener('click', () => {
-        if (lockStatus[data.motor]) return;
+        if (items.every(i => lockStatus[i.motor])) return;
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         section.classList.add('active');
       });
@@ -136,11 +193,18 @@
       updateLockUI();
       goBack();
 
+      setTimeout(() => {
+        lockStatus[motorKey] = false;
+        updateLockUI();
+      }, 7000);
+
       document.getElementById('menu').style.display = 'none';
       document.getElementById('map').style.display = 'block';
+      startGeoTracking();
+
       const courier = document.getElementById('courier');
-      courier.style.left = '80%';
-      courier.style.top = '80%';
+      courier.style.left = '150px';
+      courier.style.top = '150px';
 
       setTimeout(() => {
         document.getElementById('map').style.display = 'none';
@@ -184,22 +248,28 @@
 
     function updateLockUI() {
       document.querySelectorAll('.section').forEach(section => {
-        const motorKey = section.dataset.motor;
-        const isLocked = lockStatus[motorKey];
-        const label = section.querySelector('.label');
-        const lockedMessage = section.querySelector('.locked-message');
         const buttons = section.querySelectorAll('.order-btn');
+        const lockedMessage = section.querySelector('.locked-message');
         const backButton = section.querySelector('.back-button');
 
-        if (isLocked) {
+        let allLocked = true;
+        buttons.forEach(btn => {
+          const motorKey = btn.dataset.motor;
+          if (lockStatus[motorKey]) {
+            btn.style.display = 'none';
+          } else {
+            btn.style.display = 'inline-block';
+            allLocked = false;
+          }
+        });
+
+        if (allLocked) {
           section.classList.add('locked');
           if (lockedMessage) lockedMessage.style.display = 'block';
-          buttons.forEach(btn => btn.style.display = 'none');
           if (backButton) backButton.style.display = 'inline-block';
         } else {
           section.classList.remove('locked');
           if (lockedMessage) lockedMessage.style.display = 'none';
-          buttons.forEach(btn => btn.style.display = 'inline-block');
           if (backButton) backButton.style.display = 'none';
         }
       });

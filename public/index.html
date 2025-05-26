@@ -215,40 +215,30 @@
     });
 
     function prepareDelivery(motorKey) {
-  if (lockStatus[motorKey]) return;
-  selectedMotor = motorKey;
+      if (lockStatus[motorKey]) return;
+      selectedMotor = motorKey;
+      lockStatus[motorKey] = true;
+      updateLockUI();
+      goBack();
 
-  // 🔒 鎖定自己
-  lockStatus[motorKey] = true;
+      setTimeout(() => {
+        lockStatus[motorKey] = false;
+        updateLockUI();
+      }, 7000);
 
-  // 🔒 若是綁定項目，順便鎖定對應的另一個
-  if (motorKey === 'motor11') lockStatus['motor14'] = true;
-  if (motorKey === 'motor14') lockStatus['motor11'] = true;
+      document.getElementById('menu').style.display = 'none';
+      document.getElementById('map').style.display = 'block';
+      startGeoTracking();
 
-  updateLockUI();
-  goBack();
+      const courier = document.getElementById('courier');
+      courier.style.left = '150px';
+      courier.style.top = '150px';
 
-  setTimeout(() => {
-    lockStatus[motorKey] = false;
-    if (motorKey === 'motor11') lockStatus['motor14'] = false;
-    if (motorKey === 'motor14') lockStatus['motor11'] = false;
-    updateLockUI();
-  }, 7000);
-
-  document.getElementById('menu').style.display = 'none';
-  document.getElementById('map').style.display = 'block';
-  startGeoTracking();
-
-  const courier = document.getElementById('courier');
-  courier.style.left = '150px';
-  courier.style.top = '150px';
-
-  setTimeout(() => {
-    document.getElementById('map').style.display = 'none';
-    document.getElementById('delivered').style.display = 'block';
-  }, 10000);
-}
-
+      setTimeout(() => {
+        document.getElementById('map').style.display = 'none';
+        document.getElementById('delivered').style.display = 'block';
+      }, 10000);
+    }
 
     async function confirmDelivery() {
       document.getElementById('delivered').style.display = 'none';

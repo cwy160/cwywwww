@@ -33,15 +33,25 @@ app.post('/send', (req, res) => {
   const { data } = req.body;
   console.log('收到指令：', data);
   latestData = data;
+
+  // 🔒 正常鎖定自己
   lockStatus[data] = true;
+
+  // 🔒 額外綁定：火腐小辣（motor11）與檸茶小辣（motor14）
+  if (data === 'motor11') lockStatus['motor14'] = true;
+  if (data === 'motor14') lockStatus['motor11'] = true;
+
   res.sendStatus(200);
 
-  // 自動解鎖（模擬馬達完成）
+  // ⏱ 自動解鎖
   setTimeout(() => {
     lockStatus[data] = false;
-    console.log('已解鎖：', data);
+    if (data === 'motor11') lockStatus['motor14'] = false;
+    if (data === 'motor14') lockStatus['motor11'] = false;
+    console.log('已解鎖：', data, '和綁定項目');
   }, 7000);
 });
+
 
 app.get('/latest', (req, res) => {
   res.json({ data: latestData });

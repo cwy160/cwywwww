@@ -215,30 +215,33 @@
     });
 
     function prepareDelivery(motorKey) {
-      if (lockStatus[motorKey]) return;
-      selectedMotor = motorKey;
-      lockStatus[motorKey] = true;
-      updateLockUI();
-      goBack();
+  if (lockStatus[motorKey]) return;
 
-      setTimeout(() => {
-        lockStatus[motorKey] = false;
-        updateLockUI();
-      }, 7000);
+  selectedMotor = motorKey;
+  lockStatus[motorKey] = true;
+  updateLockUI(); // 立即鎖定所有同 motor 的按鈕
 
-      document.getElementById('menu').style.display = 'none';
-      document.getElementById('map').style.display = 'block';
-      startGeoTracking();
+  // 7 秒後自動解鎖
+  setTimeout(() => {
+    lockStatus[motorKey] = false;
+    updateLockUI();
+  }, 7000);
 
-      const courier = document.getElementById('courier');
-      courier.style.left = '150px';
-      courier.style.top = '150px';
+  // 接下來可以繼續跑你的動畫／外送員邏輯
+  document.getElementById('menu').style.display = 'none';
+  document.getElementById('map').style.display = 'block';
+  startGeoTracking();
 
-      setTimeout(() => {
-        document.getElementById('map').style.display = 'none';
-        document.getElementById('delivered').style.display = 'block';
-      }, 10000);
-    }
+  const courier = document.getElementById('courier');
+  courier.style.left = '150px';
+  courier.style.top = '150px';
+
+  setTimeout(() => {
+    document.getElementById('map').style.display = 'none';
+    document.getElementById('delivered').style.display = 'block';
+  }, 10000);
+}
+
 
     async function confirmDelivery() {
       document.getElementById('delivered').style.display = 'none';
@@ -275,33 +278,34 @@
     }
 
     function updateLockUI() {
-      document.querySelectorAll('.section').forEach(section => {
-        const buttons = section.querySelectorAll('.order-btn');
-        const lockedMessage = section.querySelector('.locked-message');
-        const backButton = section.querySelector('.back-button');
-
-        let allLocked = true;
-        buttons.forEach(btn => {
-          const motorKey = btn.dataset.motor;
-          if (lockStatus[motorKey]) {
-            btn.style.display = 'none';
-          } else {
-            btn.style.display = 'inline-block';
-            allLocked = false;
-          }
-        });
-
-        if (allLocked) {
-          section.classList.add('locked');
-          if (lockedMessage) lockedMessage.style.display = 'block';
-          if (backButton) backButton.style.display = 'inline-block';
-        } else {
-          section.classList.remove('locked');
-          if (lockedMessage) lockedMessage.style.display = 'none';
-          if (backButton) backButton.style.display = 'none';
-        }
-      });
+  const allButtons = document.querySelectorAll('.order-btn');
+  allButtons.forEach(btn => {
+    const motorKey = btn.dataset.motor;
+    if (lockStatus[motorKey]) {
+      btn.style.display = 'none';
+    } else {
+      btn.style.display = 'inline-block';
     }
+  });
+
+  document.querySelectorAll('.section').forEach(section => {
+    const buttons = section.querySelectorAll('.order-btn');
+    const lockedMessage = section.querySelector('.locked-message');
+    const backButton = section.querySelector('.back-button');
+
+    const allLocked = Array.from(buttons).every(btn => lockStatus[btn.dataset.motor]);
+    if (allLocked) {
+      section.classList.add('locked');
+      if (lockedMessage) lockedMessage.style.display = 'block';
+      if (backButton) backButton.style.display = 'inline-block';
+    } else {
+      section.classList.remove('locked');
+      if (lockedMessage) lockedMessage.style.display = 'none';
+      if (backButton) backButton.style.display = 'none';
+    }
+  });
+}
+
 
     function goBack() {
       document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));

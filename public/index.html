@@ -109,19 +109,16 @@
   </div>
 
   <script>
-    // 定位與方向偵測
     function startGeoTracking() {
       navigator.geolocation.watchPosition(pos => {
         const user = document.getElementById('user');
         const arrow = document.getElementById('arrow');
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
         user.style.left = '150px';
         user.style.top = '150px';
         arrow.style.left = '155px';
         arrow.style.top = '140px';
       });
-  
+
       if (window.DeviceOrientationEvent) {
         window.addEventListener('deviceorientation', e => {
           const angle = e.alpha;
@@ -132,68 +129,24 @@
         });
       }
     }
-  
+
     const menuData = {
       火豆腐: [
         { label: '小辣', motor: 'motor1' },
         { label: '中辣', motor: 'motor2' },
         { label: '大辣', motor: 'motor3' }
       ],
-      青清檸茶: [
+      青茶: [
         { label: '微糖', motor: 'motor4' },
         { label: '半糖', motor: 'motor5' },
         { label: '全糖', motor: 'motor6' }
-      ],
-      粒子豆腐: [
-        { label: '附湯', motor: 'motor7' },
-        { label: '不附湯', motor: 'motor8' },
-      ],
-      我豆腐: [
-        { label: '附湯', motor: 'motor9' },
-        { label: '不附湯', motor: 'motor10' }
-      ],
-      豆腐: [
-        { label: '小辣', motor: 'motor11' },
-        { label: '中辣', motor: 'motor12' },
-        { label: '大辣', motor: 'motor13' },
-      ],
-      青茶: [
-        { label: '小辣', motor: 'motor14' },
-        { label: '中辣', motor: 'motor15' },
-        { label: '大辣', motor: 'motor16' },
-      ],
-      我腐: [
-        { label: '附湯', motor: 'motor9' },
-        { label: '不附湯', motor: 'motor10' }
-      ],
-      火腐: [
-        { label: '小辣', motor: 'motor11' },
-        { label: '中辣', motor: 'motor12' },
-        { label: '大辣', motor: 'motor13' },
-      ],
-      檸茶: [
-        { label: '小辣', motor: 'motor14' },
-        { label: '中辣', motor: 'motor15' },
-        { label: '大辣', motor: 'motor16' },
-      ],
+      ]
     };
-  
+
     const lockStatus = {};
     const menuDiv = document.getElementById('menu');
     let selectedMotor = '';
-  
-    async function syncLockStatus() {
-      try {
-        const res = await fetch('https://cwywwww.onrender.com/status');
-        const data = await res.json();
-        Object.assign(lockStatus, data);
-        updateLockUI();
-      } catch (e) {
-        console.error('同步狀態失敗', e);
-      }
-    }
-    setInterval(syncLockStatus, 1000);
-  
+
     Object.entries(menuData).forEach(([label, items]) => {
       const section = document.createElement('div');
       section.className = 'section';
@@ -212,61 +165,48 @@
       });
       menuDiv.appendChild(section);
     });
-  
+
     async function prepareDelivery(motorKey) {
+      if (lockStatus[motorKey]) return;
+      selectedMotor = motorKey;
+      lockStatus[motorKey] = true;
+      updateLockUI();
       await fetch('https://vber-vhtk.onrender.com/lock', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ motor: motorKey })
       });
-  
-      if (lockStatus[motorKey]) return;
-  
-      selectedMotor = motorKey;
-      lockStatus[motorKey] = true;
-      updateLockUI();
-      goBack();
-  
-      // 🔽 新增：將所有綁定同 motor 的按鈕暫時禁用
-      const allButtons = document.querySelectorAll(`button[data-motor="${motorKey}"]`);
-      allButtons.forEach(btn => {
-        btn.disabled = true;
-        btn.style.opacity = '0.5';
-        btn.style.cursor = 'not-allowed';
-      });
-  
+
       setTimeout(() => {
         lockStatus[motorKey] = false;
         updateLockUI();
-  
-        // 🔽 新增：恢復按鈕狀態
-        allButtons.forEach(btn => {
-          btn.disabled = false;
-          btn.style.opacity = '1';
-          btn.style.cursor = 'pointer';
-        });
       }, 7000);
-  
-      // 原流程：模擬地圖與送達
+
+      goBack();
       document.getElementById('menu').style.display = 'none';
       document.getElementById('map').style.display = 'block';
       startGeoTracking();
-  
+
       const courier = document.getElementById('courier');
       courier.style.left = '150px';
       courier.style.top = '150px';
-  
+
       setTimeout(() => {
         document.getElementById('map').style.display = 'none';
         document.getElementById('delivered').style.display = 'block';
       }, 10000);
     }
-  
+
     async function confirmDelivery() {
       document.getElementById('delivered').style.display = 'none';
       showGrid(selectedMotor);
+      await fetch('https://vber-vhtk.onrender.com/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: selectedMotor })
+      });
     }
-  
+
     function showGrid(motorKey) {
       const table = document.getElementById('gridTable');
       table.innerHTML = '';
@@ -290,13 +230,13 @@
         document.getElementById('thanks').style.display = 'block';
       }, 7000);
     }
-  
+
     function updateLockUI() {
       document.querySelectorAll('.section').forEach(section => {
         const buttons = section.querySelectorAll('.order-btn');
         const lockedMessage = section.querySelector('.locked-message');
         const backButton = section.querySelector('.back-button');
-  
+
         let allLocked = true;
         buttons.forEach(btn => {
           const motorKey = btn.dataset.motor;
@@ -307,7 +247,7 @@
             allLocked = false;
           }
         });
-  
+
         if (allLocked) {
           section.classList.add('locked');
           if (lockedMessage) lockedMessage.style.display = 'block';
@@ -319,15 +259,27 @@
         }
       });
     }
-  
+
     function goBack() {
       document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     }
-  
+
     function goBackHome() {
       document.getElementById('thanks').style.display = 'none';
       document.getElementById('menu').style.display = 'block';
     }
+
+    async function syncLockStatus() {
+      try {
+        const res = await fetch('https://vber-vhtk.onrender.com/status');
+        const data = await res.json();
+        Object.assign(lockStatus, data);
+        updateLockUI();
+      } catch (e) {
+        console.error('同步狀態失敗', e);
+      }
+    }
+    setInterval(syncLockStatus, 1000);
   </script>
 </body>
 </html>

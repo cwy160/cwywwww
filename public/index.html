@@ -214,17 +214,26 @@
       menuDiv.appendChild(section);
     });
 
-    function prepareDelivery(motorKey) {
+    await fetch('https://cwywwww.onrender.com/lock', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ motor: motorKey })
+});
+
+
       if (lockStatus[motorKey]) return;
       selectedMotor = motorKey;
       lockStatus[motorKey] = true;
       updateLockUI();
       goBack();
 
+      
       setTimeout(() => {
         lockStatus[motorKey] = false;
         updateLockUI();
       }, 7000);
+ 
+
 
       document.getElementById('menu').style.display = 'none';
       document.getElementById('map').style.display = 'block';
@@ -238,16 +247,12 @@
         document.getElementById('map').style.display = 'none';
         document.getElementById('delivered').style.display = 'block';
       }, 10000);
-    }
+    
 
     async function confirmDelivery() {
       document.getElementById('delivered').style.display = 'none';
       showGrid(selectedMotor);
-      await fetch('https://cwywwww.onrender.com/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: selectedMotor })
-      });
+      
     }
 
     function showGrid(motorKey) {

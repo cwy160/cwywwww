@@ -36,12 +36,28 @@ app.post('/send', (req, res) => {
   lockStatus[data] = true;
   res.sendStatus(200);
 
+ 
+
   // 自動解鎖（模擬馬達完成）
   setTimeout(() => {
     lockStatus[data] = false;
     console.log('已解鎖：', data);
   }, 7000);
 });
+
+app.post('/lock', (req, res) => {
+  const { motor } = req.body;
+  if (motor) {
+    lockStatus[motor] = true;
+    setTimeout(() => {
+      lockStatus[motor] = false;
+    }, 7000);
+    res.sendStatus(200);
+  } else {
+    res.status(400).send('Invalid motor key');
+  }
+});
+
 
 app.get('/latest', (req, res) => {
   res.json({ data: latestData });

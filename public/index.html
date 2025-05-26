@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>偽外送平台</title>
   <style>
     body { font-family: sans-serif; margin: 0; padding: 1rem; background: #fefefe; }
@@ -14,10 +14,12 @@
       border-radius: 8px;
       background: #fff;
       transition: background 0.3s;
+      cursor: pointer;
     }
     .section.locked {
       background: #f0f0f0;
       color: #999;
+      cursor: default;
     }
     .section .label {
       font-weight: bold;
@@ -49,6 +51,7 @@
       margin-top: 1rem;
       padding: 0.5rem;
       font-size: 1rem;
+      display: none;
     }
     #map, #grid, #delivered, #thanks { display: none; text-align: center; }
     #map {
@@ -82,6 +85,10 @@
     }
     #grid .highlight { background: red; color: white; }
     button.confirm { margin-top: 1rem; font-size: 1rem; padding: 0.5rem 1rem; }
+    button.order-btn[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -99,10 +106,12 @@
     <p>您的餐點已送達！</p>
     <button class="confirm" onclick="confirmDelivery()">確認收餐</button>
   </div>
+
   <div id="grid">
     <table id="gridTable"></table>
     <p id="pickupText">請查收您的餐點，取餐位置為：</p>
   </div>
+
   <div id="thanks">
     <p>謝謝您的購買！</p>
     <button class="confirm" onclick="goBackHome()">回首頁</button>
@@ -116,7 +125,7 @@
         const arrow = document.getElementById('arrow');
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
-        // 假設中心座標 → 定點繪製即可（示意）
+        // 示意固定位置
         user.style.left = '150px';
         user.style.top = '150px';
         arrow.style.left = '155px';
@@ -125,7 +134,7 @@
 
       if (window.DeviceOrientationEvent) {
         window.addEventListener('deviceorientation', e => {
-          const angle = e.alpha; // 使用 alpha 作為方向（順時針 0~360）
+          const angle = e.alpha;
           const arrow = document.getElementById('arrow');
           if (angle != null) {
             arrow.style.transform = `rotate(${angle}deg)`;
@@ -147,7 +156,7 @@
       ],
       粒子豆腐: [
         { label: '附湯', motor: 'motor7' },
-        { label: '不附湯', motor: 'motor8' },
+        { label: '不附湯', motor: 'motor8' }
       ],
       我豆腐: [
         { label: '附湯', motor: 'motor9' },
@@ -156,12 +165,12 @@
       豆腐: [
         { label: '小辣', motor: 'motor11' },
         { label: '中辣', motor: 'motor12' },
-        { label: '大辣', motor: 'motor13' },
+        { label: '大辣', motor: 'motor13' }
       ],
       青茶: [
-      { label: '小辣', motor: 'motor14' },
+        { label: '小辣', motor: 'motor14' },
         { label: '中辣', motor: 'motor15' },
-        { label: '大辣', motor: 'motor16' },
+        { label: '大辣', motor: 'motor16' }
       ],
       我腐: [
         { label: '附湯', motor: 'motor9' },
@@ -170,12 +179,12 @@
       火腐: [
         { label: '小辣', motor: 'motor11' },
         { label: '中辣', motor: 'motor12' },
-        { label: '大辣', motor: 'motor13' },
+        { label: '大辣', motor: 'motor13' }
       ],
       檸茶: [
-      { label: '小辣', motor: 'motor14' },
+        { label: '小辣', motor: 'motor14' },
         { label: '中辣', motor: 'motor15' },
-        { label: '大辣', motor: 'motor16' },
+        { label: '大辣', motor: 'motor16' }
       ],
     };
 
@@ -195,10 +204,12 @@
     }
     setInterval(syncLockStatus, 1000);
 
+    // 建立菜單與按鈕
     Object.entries(menuData).forEach(([label, items]) => {
       const section = document.createElement('div');
       section.className = 'section';
-      section.innerHTML = `<div class="label">${label}</div>
+      section.innerHTML = `
+        <div class="label">${label}</div>
         <div class="details">
           <div class="item-buttons">
             ${items.map(i => `<button class="order-btn" data-motor="${i.motor}" onclick="prepareDelivery('${i.motor}')">${i.label}</button>`).join('')}
@@ -214,92 +225,32 @@
       menuDiv.appendChild(section);
     });
 
-    function prepareDelivery(motorKey) {
-      if (lockStatus[motorKey]) return;
-      selectedMotor = motorKey;
-      lockStatus[motorKey] = true;
-      updateLockUI();
-      goBack();
-
-      setTimeout(() => {
-        lockStatus[motorKey] = false;
-        updateLockUI();
-      }, 7000);
-
-      document.getElementById('menu').style.display = 'none';
-      document.getElementById('map').style.display = 'block';
-      startGeoTracking();
-
-      const courier = document.getElementById('courier');
-      courier.style.left = '150px';
-      courier.style.top = '150px';
-
-      setTimeout(() => {
-        document.getElementById('map').style.display = 'none';
-        document.getElementById('delivered').style.display = 'block';
-      }, 10000);
-    }
-
-    async function confirmDelivery() {
-      document.getElementById('delivered').style.display = 'none';
-      showGrid(selectedMotor);
-      await fetch('https://cwywwww.onrender.com/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: selectedMotor })
-      });
-    }
-
-    function showGrid(motorKey) {
-      const table = document.getElementById('gridTable');
-      table.innerHTML = '';
-      const pos = parseInt(motorKey.replace('motor', ''));
-      const row = Math.floor((pos - 1) / 4) + 1;
-      const col = ((pos - 1) % 4) + 1;
-      for (let r = 1; r <= 4; r++) {
-        const tr = document.createElement('tr');
-        for (let c = 1; c <= 4; c++) {
-          const td = document.createElement('td');
-          if (r === row && c === col) td.className = 'highlight';
-          td.textContent = `${r}-${c}`;
-          tr.appendChild(td);
-        }
-        table.appendChild(tr);
-      }
-      document.getElementById('pickupText').textContent = `請查收您的餐點，取餐位置為：${row}-${col}`;
-      document.getElementById('grid').style.display = 'block';
-      setTimeout(() => {
-        document.getElementById('grid').style.display = 'none';
-        document.getElementById('thanks').style.display = 'block';
-      }, 7000);
-    }
-
     function updateLockUI() {
-      document.querySelectorAll('.section').forEach(section => {
-        const buttons = section.querySelectorAll('.order-btn');
-        const lockedMessage = section.querySelector('.locked-message');
-        const backButton = section.querySelector('.back-button');
-
-        let allLocked = true;
-        buttons.forEach(btn => {
-          const motorKey = btn.dataset.motor;
-          if (lockStatus[motorKey]) {
-            btn.style.display = 'none';
-          } else {
-            btn.style.display = 'inline-block';
-            allLocked = false;
-          }
-        });
-
+      const sections = menuDiv.querySelectorAll('.section');
+      sections.forEach(section => {
+        const labelDiv = section.querySelector('.label');
+        const details = section.querySelector('.details');
+        const buttons = details.querySelectorAll('button.order-btn');
+        const lockedMsg = details.querySelector('.locked-message');
+        // 判斷整個分類是否全鎖
+        const allLocked = Array.from(buttons).every(btn => lockStatus[btn.dataset.motor]);
         if (allLocked) {
           section.classList.add('locked');
-          if (lockedMessage) lockedMessage.style.display = 'block';
-          if (backButton) backButton.style.display = 'inline-block';
         } else {
           section.classList.remove('locked');
-          if (lockedMessage) lockedMessage.style.display = 'none';
-          if (backButton) backButton.style.display = 'none';
         }
+        buttons.forEach(btn => {
+          if (lockStatus[btn.dataset.motor]) {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+          } else {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+          }
+        });
+        lockedMsg.style.display = allLocked ? 'block' : 'none';
       });
     }
 
@@ -307,10 +258,71 @@
       document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     }
 
-    function goBackHome() {
-      document.getElementById('thanks').style.display = 'none';
-      document.getElementById('menu').style.display = 'block';
+    // 按下點餐後的流程
+    async function prepareDelivery(motor) {
+      if (!motor) return;
+      selectedMotor = motor;
+
+      // 禁用所有點餐按鈕並調整樣式
+      const allButtons = document.querySelectorAll('button.order-btn');
+      allButtons.forEach(btn => {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+      });
+
+      // 顯示送餐頁面並開始地理與方向偵測
+      document.getElementById('menu').style.display = 'none';
+      document.getElementById('map').style.display = 'block';
+      startGeoTracking();
+
+      try {
+        // 呼叫後端準備動作
+        await fetch(`https://cwywwww.onrender.com/prepare?motor=${motor}`);
+      } catch (e) {
+        alert('呼叫送餐API失敗');
+        // 回復按鈕狀態與介面
+        document.getElementById('menu').style.display = 'block';
+        document.getElementById('map').style.display = 'none';
+        allButtons.forEach(btn => {
+          btn.disabled = false;
+          btn.style.opacity = '1';
+          btn.style.cursor = 'pointer';
+        });
+        return;
+      }
     }
+
+    // 外送員抵達，顯示確認送達畫面
+    function deliveryArrived() {
+      document.getElementById('map').style.display = 'none';
+      document.getElementById('delivered').style.display = 'block';
+    }
+
+    // 收餐確認，顯示取餐格子
+    async function confirmDelivery() {
+      document.getElementById('delivered').style.display = 'none';
+      const gridDiv = document.getElementById('grid');
+      const gridTable = document.getElementById('gridTable');
+      gridDiv.style.display = 'block';
+      // 隨機產生一個4x4格子的取餐位置
+      const pos = Math.floor(Math.random() * 16);
+      let html = '';
+      for (let i=0; i<16; i++) {
+        html += `<td class="${i===pos ? 'highlight' : ''}">${i+1}</td>`;
+        if ((i+1) % 4 === 0) html += '</tr><tr>';
+      }
+      gridTable.innerHTML = `<tr>${html}</tr>`;
+      document.getElementById('pickupText').textContent = `請查收您的餐點，取餐位置為：格子 ${pos+1}`;
+    }
+
+    function goBackHome() {
+      document.getElementById('grid').style.display = 'none';
+      document.getElementById('thanks').style.display = 'block';
+    }
+
+    // 預設啟動時更新鎖定狀態UI
+    syncLockStatus();
   </script>
 </body>
 </html>

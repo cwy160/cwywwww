@@ -89,10 +89,9 @@
   <div id="menu" class="menu"></div>
 
   <div id="map">
-    <div id="courier"></div>
-    <div id="user"></div>
-    <div id="arrow"></div>
-    <p>外送員正在前往您所在位置...</p>
+    <div id="animation" style="display:none; text-align:center;">
+      <img id="courierAnimation" src="" style="width:150px; height:auto;">
+      <p>外送員正在配送中…</p>
   </div>
 
   <div id="delivered">
@@ -109,6 +108,33 @@
   </div>
 
   <script>
+    function startAnimationSequence() {
+  const animation = document.getElementById('animation');
+  const img = document.getElementById('courierAnimation');
+
+  const frames = [
+    { src: 'IMG_4596.PNG', duration: 1000 },
+    { src: 'IMG_4598.PNG', duration: 2500 },
+    { src: 'IMG_4596.PNG', duration: 1000 },
+    { src: 'IMG_4598.PNG', duration: 2500 }
+  ];
+
+  let i = 0;
+
+  function nextFrame() {
+    if (i >= frames.length) {
+      animation.style.display = 'none';
+      document.getElementById('delivered').style.display = 'block';
+      return;
+    }
+    img.src = frames[i].src;
+    setTimeout(nextFrame, frames[i].duration);
+    i++;
+  }
+
+  nextFrame();
+}
+
     // 定位與方向偵測
     function startGeoTracking() {
       navigator.geolocation.watchPosition(pos => {
@@ -228,17 +254,11 @@
       }, 7000);
 
       document.getElementById('menu').style.display = 'none';
-      document.getElementById('map').style.display = 'block';
-      startGeoTracking();
+document.getElementById('map').style.display = 'none';
+document.getElementById('animation').style.display = 'block';
 
-      const courier = document.getElementById('courier');
-      courier.style.left = '150px';
-      courier.style.top = '150px';
+startAnimationSequence(); // 開始圖片輪替動畫
 
-      setTimeout(() => {
-        document.getElementById('map').style.display = 'none';
-        document.getElementById('delivered').style.display = 'block';
-      }, 10000);
     }
 
     async function confirmDelivery() {

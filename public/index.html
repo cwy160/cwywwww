@@ -52,11 +52,13 @@
     }
     #map, #grid, #delivered, #thanks { display: none; text-align: center; }
     #map {
-      height: 300px;
-      background: linear-gradient(#e0f7fa, #b2ebf2);
-      position: relative;
-      overflow: hidden;
-    }
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(#e0f7fa, #b2ebf2); /* 保留 */
+  overflow: hidden;
+}
+
     #courier {
       width: 20px; height: 20px; border-radius: 50%; background: red;
       position: absolute; top: 10px; left: 10px; transition: all 10s linear;
@@ -89,7 +91,19 @@
   <div id="menu" class="menu"></div>
 
   <div id="map">
-    <img id="courierAnimation" src="" style="position:absolute; top:50px; left:50px; width:100px; image-rendering: pixelated;">
+<!-- 滿版背景動畫圖 -->
+<img id="courierBg" src="" 
+     style="position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            object-fit: cover; z-index: 1;">
+
+
+<img id="courierAnimation" src=""
+     style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 100px; image-rendering: pixelated; z-index: 2;">
+
+
+
+
     <div id="courier"></div>
     <div id="user"></div>
     <div id="arrow"></div>
@@ -219,35 +233,58 @@
     });
 
     function startAnimationSequence() {
-  const animation = document.getElementById('courierAnimation');
-  const frames = [
+  const topImg = document.getElementById('courierAnimation');
+  const bottomImg = document.getElementById('courierBg');
+
+  const topFrames = [
     { src: 'IMG_4596.PNG', duration: 1000 },
     { src: 'IMG_4598.PNG', duration: 2500 },
     { src: 'IMG_4596.PNG', duration: 1000 },
   ];
 
-  let timePassed = 0;
-  let frameIndex = 0;
+  const bottomFrames = [
+    { src: 'clo1.png', duration: 1000 },
+    { src: 'clo2.png', duration: 3000 },
+    { src: 'clo1.png', duration: 1000 },
+  ];
 
-  function playNextFrame() {
-    if (timePassed >= 10000) {
-      animation.style.display = 'none';
+  let timePassedTop = 0, indexTop = 0;
+  let timePassedBottom = 0, indexBottom = 0;
+
+  function playTop() {
+    if (timePassedTop >= 10000) {
+      topImg.style.display = 'none';
       return;
     }
-
-    const current = frames[frameIndex % frames.length];
-    animation.src = current.src;
-    animation.style.display = 'block';
-
+    const current = topFrames[indexTop % topFrames.length];
+    topImg.src = current.src;
+    topImg.style.display = 'block';
     setTimeout(() => {
-      timePassed += current.duration;
-      frameIndex++;
-      playNextFrame();
+      timePassedTop += current.duration;
+      indexTop++;
+      playTop();
     }, current.duration);
   }
 
-  playNextFrame();
+  function playBottom() {
+    if (timePassedBottom >= 10000) {
+      bottomImg.style.display = 'none';
+      return;
+    }
+    const current = bottomFrames[indexBottom % bottomFrames.length];
+    bottomImg.src = current.src;
+    bottomImg.style.display = 'block';
+    setTimeout(() => {
+      timePassedBottom += current.duration;
+      indexBottom++;
+      playBottom();
+    }, current.duration);
+  }
+
+  playTop();
+  playBottom();
 }
+
 
 
     function prepareDelivery(motorKey) {

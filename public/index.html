@@ -315,17 +315,25 @@ function showPreDelivery() {
   document.getElementById('preDelivery').style.display = 'block';
 
   const img = document.getElementById('preImg');
-  img.src = 'p1.PNG';
+  img.src = 'p1.png'; // 顯示 p1.png 第一次（2秒）
 
   setTimeout(() => {
-    img.src = 'p2.PNG';
-  }, 2000); // 顯示 p1.png 兩秒後換圖
+    img.src = 'p2.png'; // 換成 p2.png（2秒）
+  }, 2000); // 在第2秒時切換
+
+  setTimeout(() => {
+    img.src = 'p1.png'; // 再切回 p1.png（2秒）
+  }, 4000); // 在第4秒時切換
 
   setTimeout(() => {
     document.getElementById('preDelivery').style.display = 'none';
     document.getElementById('delivered').style.display = 'block';
-  }, 4000); // 再兩秒後切換到餐點已送達
+  }, 6000); // 在第6秒時結束動畫，切換畫面
 }
+
+
+
+
 
 
     function prepareDelivery(motorKey) {

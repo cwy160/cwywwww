@@ -145,7 +145,7 @@
     <p id="pickupText">請查收您的餐點，取餐位置為：</p>
   </div>
   <div id="thanks">
-    <img id="thankImage" src="thank.PNG" alt="感謝圖片"
+    <img id="thankImage" src="thank.png" alt="感謝圖片"
          style="width: 80vw; max-width: 400px; margin-top: 1rem;">
     <p>謝謝您的購買！</p>
     <button class="confirm" onclick="goBackHome()">回首頁</button>
@@ -469,7 +469,7 @@ function startThankImageLoop() {
   let showingFirst = true;
 
   thankAnimationInterval = setInterval(() => {
-    img.src = showingFirst ? 'thank2.PNG' : 'thank.PNG';
+    img.src = showingFirst ? 'thank2.PNG' : 'thank.png';
     showingFirst = !showingFirst;
   }, 1500); // 每 1.5 秒切換
 }

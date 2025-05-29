@@ -315,20 +315,49 @@ function showPreDelivery() {
   document.getElementById('preDelivery').style.display = 'block';
 
   const img = document.getElementById('preImg');
-  img.src = 'p1.png'; // 顯示 p1.png 第一次（2秒）
+  const text = document.getElementById('preText');
 
+  // 初始文字
+  text.textContent = '外送員已降落，正在前往您的位置中...';
+
+  // 第一段：p1 → 2s
+  img.src = 'p1.png';
+
+  // 第二段：p2 → 2.5s
   setTimeout(() => {
-    img.src = 'p2.png'; // 換成 p2.png（2秒）
-  }, 2000); // 在第2秒時切換
+    img.src = 'p2.png';
+  }, 2000);
 
+  // 第三段：p1 again → 2s
   setTimeout(() => {
-    img.src = 'p1.png'; // 再切回 p1.png（2秒）
-  }, 4500); // 在第4秒時切換
+    img.src = 'p1.png';
+  }, 4500);
 
+  // ✅ 在 6.5 秒時換文字
+  setTimeout(() => {
+    text.textContent = '正在前往您的位置中...';
+  }, 6500);
+
+  // 顯示 4.png
+  setTimeout(() => {
+    img.src = '4.png';
+  }, 6500);
+
+  // 顯示 3.png
+  setTimeout(() => {
+    img.src = '3.png';
+  }, 8500);
+
+  // 顯示 2.png
+  setTimeout(() => {
+    img.src = '2.png';
+  }, 10500);
+
+  // 結束，進入 delivered
   setTimeout(() => {
     document.getElementById('preDelivery').style.display = 'none';
     document.getElementById('delivered').style.display = 'block';
-  }, 6500); // 在第6秒時結束動畫，切換畫面
+  }, 12500);
 }
 
 

@@ -49,6 +49,15 @@
       margin-top: 1rem;
       padding: 0.5rem;
       font-size: 1rem;
+      .centered-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* 垂直置中 */
+  align-items: center;     /* 水平置中 */
+  text-align: center;
+  height: 100vh;           /* 填滿整個螢幕高度 */
+}
+
     }
     #map, #grid, #delivered, #thanks { display: none; text-align: center; }
     #map {
@@ -104,6 +113,11 @@
 #courier {
   display: none !important;
 }
+img {
+  max-width: 90vw;
+  height: auto;
+}
+
 
   </style>
 </head>
@@ -146,7 +160,8 @@
   </div>
   <div id="thanks">
     <img id="thankImage" src="thank.png" alt="感謝圖片"
-         style="width: 80vw; max-width: 400px; margin-top: 1rem;">
+    style="width: 58vw; max-width: 285px; margin-top: 1rem;">
+
     <p>謝謝您的購買！</p>
     <button class="confirm" onclick="goBackHome()">回首頁</button>
   </div>

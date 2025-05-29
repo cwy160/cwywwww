@@ -74,6 +74,19 @@
       transform-origin: center bottom;
       transition: transform 0.1s linear;
     }
+    #statusText {
+  position: absolute;
+  bottom: 20px;
+  width: 100%;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+ 
+  padding: 0.5rem;
+  z-index: 99;  /* ✅ 最重要！比圖層高就會顯示在最上面 */
+}
+
     #grid table { width: 100%; max-width: 300px; margin: 1rem auto; border-collapse: collapse; }
     #grid td {
       width: 25%; height: 50px;
@@ -84,6 +97,13 @@
     }
     #grid .highlight { background: red; color: white; }
     button.confirm { margin-top: 1rem; font-size: 1rem; padding: 0.5rem 1rem; }
+    #user, #arrow {
+  display: none !important;
+}
+#courier {
+  display: none !important;
+}
+
   </style>
 </head>
 <body>
@@ -107,9 +127,14 @@
     <div id="courier"></div>
     <div id="user"></div>
     <div id="arrow"></div>
-    <p>外送員正在前往您所在位置...</p>
-  </div>
+    <p id="statusText">外送員正在飛往您所在位置...</p>
 
+  </div>
+  <div id="preDelivery" style="display: none; text-align: center; position: relative;">
+    <img id="preImg" src="" style="width: 80vw; max-width: 600px;">
+    <p id="preText">外送員已找到停毯位置，正在前往您的位置中...</p>
+  </div>
+  
   <div id="delivered">
     <p>您的餐點已送達！</p>
     <button class="confirm" onclick="confirmDelivery()">確認收餐</button>
@@ -238,7 +263,7 @@
 
   const topFrames = [
     { src: 'IMG_4596.PNG', duration: 1000 },
-    { src: 'IMG_4598.PNG', duration: 2500 },
+    { src: 'IMG_4598.PNG', duration: 3000 },
     { src: 'IMG_4596.PNG', duration: 1000 },
   ];
 
@@ -285,6 +310,22 @@
   playBottom();
 }
 
+function showPreDelivery() {
+  document.getElementById('map').style.display = 'none';
+  document.getElementById('preDelivery').style.display = 'block';
+
+  const img = document.getElementById('preImg');
+  img.src = 'p1.PNG';
+
+  setTimeout(() => {
+    img.src = 'p2.PNG';
+  }, 2000); // 顯示 p1.png 兩秒後換圖
+
+  setTimeout(() => {
+    document.getElementById('preDelivery').style.display = 'none';
+    document.getElementById('delivered').style.display = 'block';
+  }, 4000); // 再兩秒後切換到餐點已送達
+}
 
 
     function prepareDelivery(motorKey) {
@@ -308,9 +349,9 @@
       courier.style.top = '150px';
 
       setTimeout(() => {
-        document.getElementById('map').style.display = 'none';
-        document.getElementById('delivered').style.display = 'block';
-      }, 10000);
+  showPreDelivery();
+}, 10000);
+
     }
 
     async function confirmDelivery() {

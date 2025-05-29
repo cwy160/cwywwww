@@ -76,7 +76,7 @@
     }
     #statusText {
   position: absolute;
-  bottom: 20px;
+  top: 60%; /* 往上移，貼近圖片下緣 */
   width: 100%;
   text-align: center;
   font-size: 1.2rem;
@@ -84,8 +84,9 @@
   color: #333;
  
   padding: 0.5rem;
-  z-index: 99;  /* ✅ 最重要！比圖層高就會顯示在最上面 */
+  z-index: 99;
 }
+
 
     #grid table { width: 100%; max-width: 300px; margin: 1rem auto; border-collapse: collapse; }
     #grid td {
@@ -144,9 +145,13 @@
     <p id="pickupText">請查收您的餐點，取餐位置為：</p>
   </div>
   <div id="thanks">
+    <img id="thankImage" src="thank.PNG" alt="感謝圖片"
+         style="width: 80vw; max-width: 400px; margin-top: 1rem;">
     <p>謝謝您的購買！</p>
     <button class="confirm" onclick="goBackHome()">回首頁</button>
   </div>
+  
+  
 
   <script>
     // 定位與方向偵測
@@ -263,13 +268,13 @@
 
   const topFrames = [
     { src: 'IMG_4596.PNG', duration: 1000 },
-    { src: 'IMG_4598.PNG', duration: 3000 },
+    { src: 'IMG_4598.PNG', duration: 2500 },
     { src: 'IMG_4596.PNG', duration: 1000 },
   ];
 
   const bottomFrames = [
     { src: 'clo1.png', duration: 1000 },
-    { src: 'clo2.png', duration: 3000 },
+    { src: 'clo2.png', duration: 2500 },
     { src: 'clo1.png', duration: 1000 },
   ];
 
@@ -277,7 +282,7 @@
   let timePassedBottom = 0, indexBottom = 0;
 
   function playTop() {
-    if (timePassedTop >= 10000) {
+    if (timePassedTop >= 4500) {
       topImg.style.display = 'none';
       return;
     }
@@ -292,7 +297,7 @@
   }
 
   function playBottom() {
-    if (timePassedBottom >= 10000) {
+    if (timePassedBottom >= 4500) {
       bottomImg.style.display = 'none';
       return;
     }
@@ -309,6 +314,7 @@
   playTop();
   playBottom();
 }
+
 
 function showPreDelivery() {
   document.getElementById('map').style.display = 'none';
@@ -387,7 +393,8 @@ function showPreDelivery() {
 
       setTimeout(() => {
   showPreDelivery();
-}, 10000);
+}, 4500);
+
 
     }
 
@@ -421,6 +428,8 @@ function showPreDelivery() {
       document.getElementById('grid').style.display = 'block';
       setTimeout(() => {
         document.getElementById('grid').style.display = 'none';
+        startThankImageLoop();
+
         document.getElementById('thanks').style.display = 'block';
       }, 7000);
     }
@@ -453,15 +462,31 @@ function showPreDelivery() {
         }
       });
     }
+    let thankAnimationInterval;
+
+function startThankImageLoop() {
+  const img = document.getElementById('thankImage');
+  let showingFirst = true;
+
+  thankAnimationInterval = setInterval(() => {
+    img.src = showingFirst ? 'thank2.PNG' : 'thank.PNG';
+    showingFirst = !showingFirst;
+  }, 1500); // 每 1.5 秒切換
+}
+
 
     function goBack() {
       document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     }
 
     function goBackHome() {
-      document.getElementById('thanks').style.display = 'none';
-      document.getElementById('menu').style.display = 'block';
-    }
+  document.getElementById('thanks').style.display = 'none';
+  document.getElementById('menu').style.display = 'block';
+
+  // 停止圖片輪播
+  clearInterval(thankAnimationInterval);
+}
+
   </script>
 </body>
 </html>

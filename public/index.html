@@ -57,6 +57,16 @@
   text-align: center;
   height: 100vh;           /* 填滿整個螢幕高度 */
 }
+.centered-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;  /* 垂直置中 */
+  align-items: center;      /* 水平置中 */
+  text-align: center;
+  height: 100vh;            /* 讓整個畫面高度填滿 */
+  padding: 1rem;
+}
+
 
     }
     #map, #grid, #delivered, #thanks { display: none; text-align: center; }
@@ -151,12 +161,12 @@ img {
     <p id="preText">外送員已找到停毯位置，正在前往您的位置中...</p>
   </div>
   
-  <div id="delivered">
+  <div id="delivered"class="centered-screen">
     <p>您的餐點已送達！</p>
     <button class="confirm" onclick="confirmDelivery()">確認收餐</button>
   </div>
   <div id="grid">
-    <table id="gridTable"></table>
+    <table id="gridTable"class="centered-screen"></table>
     <p id="pickupText">請查收您的餐點，取餐位置為：</p>
     <button id="confirmLocationBtn" class="confirm" style="display: none;" onclick="confirmAndShowEaten()">啊怎麼只有燈在閃</button>
 
@@ -170,8 +180,8 @@ img {
    
     
   </div>
-  <div id="eatenEnding" style="display:none; text-align: center;" class="centered-screen">
-    <img id="eatenImage" src="pizza1.png" style="max-width: 20vw; height: auto;" />
+  <div id="eatenEnding" style="display:none; " class="centered-screen">
+    <img id="eatenImage" src="pizza1.png" style="max-width: 30vw; height: auto;" />
 
     <p>十分抱歉，您的外賣被外送員吃掉了</p>
     <p>他說蠻好吃的</p>

@@ -157,6 +157,8 @@ img {
   <div id="grid">
     <table id="gridTable"></table>
     <p id="pickupText">請查收您的餐點，取餐位置為：</p>
+    <button id="confirmLocationBtn" class="confirm" style="display: none;" onclick="confirmAndShowEaten()">請確認您的取餐位置後 按此查收</button>
+
   </div>
   <div id="thanks">
     <img id="thankImage" src="thank.png" alt="感謝圖片"
@@ -164,11 +166,20 @@ img {
 
     <p>謝謝您的購買！</p>
     <button class="confirm" onclick="goBackHome()">回首頁</button>
+   
+    
+  </div>
+  <div id="eatenEnding" style="display:none; text-align: center;" class="centered-screen">
+    <img id="eatenImage" src="pizza1.png" style="max-width: 90vw; height: auto;" />
+    <p>十分抱歉，您的外賣被外送員吃掉了</p>
+    <button onclick="location.reload()">回首頁</button>
   </div>
   
   
 
   <script>
+    let currentMotorKey = null;
+
     // 定位與方向偵測
     function startGeoTracking() {
       navigator.geolocation.watchPosition(pos => {
@@ -422,32 +433,47 @@ function showPreDelivery() {
         body: JSON.stringify({ data: selectedMotor })
       });
     }
-
     function showGrid(motorKey) {
-      const table = document.getElementById('gridTable');
-      table.innerHTML = '';
-      const pos = parseInt(motorKey.replace('motor', ''));
-      const row = Math.floor((pos - 1) / 4) + 1;
-      const col = ((pos - 1) % 4) + 1;
-      for (let r = 1; r <= 4; r++) {
-        const tr = document.createElement('tr');
-        for (let c = 1; c <= 4; c++) {
-          const td = document.createElement('td');
-          if (r === row && c === col) td.className = 'highlight';
-          td.textContent = `${r}-${c}`;
-          tr.appendChild(td);
-        }
-        table.appendChild(tr);
-      }
-      document.getElementById('pickupText').textContent = `請查收您的餐點，取餐位置為：${row}-${col}`;
-      document.getElementById('grid').style.display = 'block';
-      setTimeout(() => {
-        document.getElementById('grid').style.display = 'none';
-        startThankImageLoop();
+  currentMotorKey = motorKey;
+  const eatenMotors = ['motor11', 'motor12', 'motor14', 'motor16'];
 
-        document.getElementById('thanks').style.display = 'block';
-      }, 7000);
+  // 顯示或隱藏確認按鈕
+  if (eatenMotors.includes(motorKey)) {
+    document.getElementById('confirmLocationBtn').style.display = 'inline-block';
+  } else {
+    document.getElementById('confirmLocationBtn').style.display = 'none';
+  }
+
+  // 產生表格
+  const table = document.getElementById('gridTable');
+  table.innerHTML = '';
+  const pos = parseInt(motorKey.replace('motor', ''));
+  const row = Math.floor((pos - 1) / 4) + 1;
+  const col = ((pos - 1) % 4) + 1;
+  for (let r = 1; r <= 4; r++) {
+    const tr = document.createElement('tr');
+    for (let c = 1; c <= 4; c++) {
+      const td = document.createElement('td');
+      if (r === row && c === col) td.className = 'highlight';
+      td.textContent = `${r}-${c}`;
+      tr.appendChild(td);
     }
+    table.appendChild(tr);
+  }
+
+  document.getElementById('pickupText').textContent = `請查收您的餐點，取餐位置為：${row}-${col}`;
+  document.getElementById('grid').style.display = 'block';
+
+  // 只有一般 motor 才自動進入「謝謝您的購買」
+  if (!eatenMotors.includes(motorKey)) {
+    setTimeout(() => {
+      document.getElementById('grid').style.display = 'none';
+      startThankImageLoop();
+      document.getElementById('thanks').style.display = 'block';
+    }, 7000);
+  }
+}
+
 
     function updateLockUI() {
       document.querySelectorAll('.section').forEach(section => {
@@ -488,6 +514,25 @@ function startThankImageLoop() {
     showingFirst = !showingFirst;
   }, 1500); // 每 1.5 秒切換
 }
+function confirmAndShowEaten() {
+  // 傳送訊號
+  fetch(`/api/send?motor=${currentMotorKey}`);
+
+  // 跳轉畫面
+  document.getElementById('grid').style.display = 'none';
+  document.getElementById('eatenEnding').style.display = 'block';
+
+  // 啟動圖輪播
+  let currentIndex = 0;
+  const images = ['pizza1.png', 'pizza2.png', 'pizza3.PNG'];
+  const imgElement = document.getElementById('eatenImage');
+
+  setInterval(() => {
+    imgElement.src = images[currentIndex];
+    currentIndex = (currentIndex + 1) % images.length;
+  }, 1500);
+}
+
 
 
     function goBack() {

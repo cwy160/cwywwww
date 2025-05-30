@@ -515,9 +515,7 @@ function startThankImageLoop() {
   }, 1500); // 每 1.5 秒切換
 }
 function confirmAndShowEaten() {
-  // 傳送訊號
-  fetch(`/api/send?motor=${currentMotorKey}`);
-
+ 
   // 跳轉畫面
   document.getElementById('grid').style.display = 'none';
   document.getElementById('eatenEnding').style.display = 'block';

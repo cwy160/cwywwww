@@ -134,7 +134,8 @@ img {
 
 <img id="courierAnimation" src=""
      style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 100px; image-rendering: pixelated; z-index: 2;">
+            width: 150px; image-rendering: pixelated; z-index: 2;">
+
 
 
 
@@ -157,7 +158,7 @@ img {
   <div id="grid">
     <table id="gridTable"></table>
     <p id="pickupText">請查收您的餐點，取餐位置為：</p>
-    <button id="confirmLocationBtn" class="confirm" style="display: none;" onclick="confirmAndShowEaten()">請確認您的取餐位置後 按此查收</button>
+    <button id="confirmLocationBtn" class="confirm" style="display: none;" onclick="confirmAndShowEaten()">啊怎麼只有燈在閃</button>
 
   </div>
   <div id="thanks">
@@ -170,8 +171,10 @@ img {
     
   </div>
   <div id="eatenEnding" style="display:none; text-align: center;" class="centered-screen">
-    <img id="eatenImage" src="pizza1.png" style="max-width: 90vw; height: auto;" />
+    <img id="eatenImage" src="pizza1.png" style="max-width: 20vw; height: auto;" />
+
     <p>十分抱歉，您的外賣被外送員吃掉了</p>
+    <p>他說蠻好吃的</p>
     <button onclick="location.reload()">回首頁</button>
   </div>
   
@@ -362,7 +365,7 @@ function showPreDelivery() {
 
   // 第三段：p1 again → 2s
   setTimeout(() => {
-    img.src = 'p1.png';
+    img.src = 'p3.png';
   }, 4500);
 
   // ✅ 在 6.5 秒時換文字
@@ -444,22 +447,41 @@ function showPreDelivery() {
     document.getElementById('confirmLocationBtn').style.display = 'none';
   }
 
-  // 產生表格
-  const table = document.getElementById('gridTable');
-  table.innerHTML = '';
-  const pos = parseInt(motorKey.replace('motor', ''));
-  const row = Math.floor((pos - 1) / 4) + 1;
-  const col = ((pos - 1) % 4) + 1;
-  for (let r = 1; r <= 4; r++) {
-    const tr = document.createElement('tr');
-    for (let c = 1; c <= 4; c++) {
-      const td = document.createElement('td');
-      if (r === row && c === col) td.className = 'highlight';
-      td.textContent = `${r}-${c}`;
-      tr.appendChild(td);
-    }
-    table.appendChild(tr);
+// 產生表格（根據 motorPositions 決定位置）
+const table = document.getElementById('gridTable');
+table.innerHTML = '';
+
+const motorPositions = {
+  motor16: [1, 1],
+  motor3:  [1, 2],
+  motor2:  [1, 3],
+  motor5:  [1, 4],
+  motor4:  [2, 1],
+  motor7:  [2, 2],
+  motor15: [2, 3],
+  motor1:  [2, 4],
+  motor14: [3, 1],
+  motor6:  [3, 2],
+  motor10: [3, 3],
+  motor13: [3, 4],
+  motor8:  [4, 1],
+  motor12: [4, 2],
+  motor9:  [4, 3],
+  motor11: [4, 4],
+};
+
+const [row, col] = motorPositions[motorKey] || [1, 1];
+
+for (let r = 1; r <= 4; r++) {
+  const tr = document.createElement('tr');
+  for (let c = 1; c <= 4; c++) {
+    const td = document.createElement('td');
+    if (r === row && c === col) td.className = 'highlight';
+    td.textContent = `${r}-${c}`;
+    tr.appendChild(td);
   }
+  table.appendChild(tr);
+}
 
   document.getElementById('pickupText').textContent = `請查收您的餐點，取餐位置為：${row}-${col}`;
   document.getElementById('grid').style.display = 'block';

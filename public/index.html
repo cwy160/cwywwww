@@ -123,7 +123,13 @@ img {
   </style>
 </head>
 <body>
- 
+  
+  <img id="progressBar" src=""
+  style="position: fixed; top: 0.5rem; left: 50%; transform: translateX(-50%);
+         width: 100px; height: auto; z-index: 999;">
+
+
+
   <div id="menu" class="menu"></div>
 
   <div id="map">
@@ -154,12 +160,15 @@ img {
   
   <div id="delivered">
     <p>您的餐點已送達！</p>
+    <img id="deliveredAnimation" src="done1.png"
+    style="max-width: 60vw; height: auto; margin-top: 1rem;" />
     <button class="confirm" onclick="confirmDelivery()">確認收餐</button>
   </div>
   <div id="grid">
     <table id="gridTable"></table>
     <p id="pickupText">請查收您的餐點，取餐位置為：</p>
     <button id="confirmLocationBtn" class="confirm" style="display: none;" onclick="confirmAndShowEaten()">啊怎麼只有燈在閃</button>
+ 
 
   </div>
   <div id="thanks">
@@ -262,16 +271,29 @@ img {
     let selectedMotor = '';
 
     async function syncLockStatus() {
-      try {
-        const res = await fetch('https://cwywwww.onrender.com/status');
-        const data = await res.json();
-        Object.assign(lockStatus, data);
-        updateLockUI();
-      } catch (e) {
-        console.error('同步狀態失敗', e);
-      }
-    }
-    setInterval(syncLockStatus, 1000);
+  try {
+    const res = await fetch('https://cwywwww.onrender.com/status');
+    const data = await res.json();
+    Object.assign(lockStatus, data);
+    updateLockUI();
+  } catch (e) {
+    console.error('同步狀態失敗', e);
+  }
+}
+
+// ✅ 新增 debounce 控制
+let debounceTimeout;
+
+function debounceSyncLockStatus() {
+  clearTimeout(debounceTimeout);
+  debounceTimeout = setTimeout(() => {
+    syncLockStatus();
+  }, 300); // 最多每 300ms 執行一次
+}
+
+// ✅ 用 debounce 包裝來取代原本每秒觸發
+setInterval(debounceSyncLockStatus, 1000);
+
 
     Object.entries(menuData).forEach(([label, items]) => {
       const section = document.createElement('div');
@@ -329,6 +351,7 @@ img {
   function playBottom() {
     if (timePassedBottom >= 4500) {
       bottomImg.style.display = 'none';
+      if (onComplete) onComplete();
       return;
     }
     const current = bottomFrames[indexBottom % bottomFrames.length];
@@ -347,6 +370,8 @@ img {
 
 
 function showPreDelivery() {
+  startProgressBarAnimation('star01.png', 'star02.png');
+
   document.getElementById('map').style.display = 'none';
   document.getElementById('preDelivery').style.display = 'block';
 
@@ -368,6 +393,10 @@ function showPreDelivery() {
   setTimeout(() => {
     img.src = 'p3.png';
   }, 4500);
+
+  setTimeout(() => {
+  startProgressBarAnimation('star02.png', 'star03.png');
+}, 6500);
 
   // ✅ 在 6.5 秒時換文字
   setTimeout(() => {
@@ -393,7 +422,11 @@ function showPreDelivery() {
   setTimeout(() => {
     document.getElementById('preDelivery').style.display = 'none';
     document.getElementById('delivered').style.display = 'block';
+    startDoneAnimation();
+  startProgressBarAnimation('star03.png', 'star04.png');
+ 
   }, 12500);
+ 
 }
 
 
@@ -402,6 +435,7 @@ function showPreDelivery() {
 
 
     function prepareDelivery(motorKey) {
+      startProgressBarAnimation('star00.png', 'star01.png');
       if (lockStatus[motorKey]) return;
       selectedMotor = motorKey;
       lockStatus[motorKey] = true;
@@ -416,6 +450,10 @@ function showPreDelivery() {
       document.getElementById('menu').style.display = 'none';
       document.getElementById('map').style.display = 'block';
       startGeoTracking();
+      
+startAnimationSequence(() => {
+  showPreDelivery(); // 動畫跑完才進入下一段流程
+});
 
       const courier = document.getElementById('courier');
       courier.style.left = '150px';
@@ -429,17 +467,40 @@ function showPreDelivery() {
     }
 
     async function confirmDelivery() {
+        stopDoneAnimation();
+       
       document.getElementById('delivered').style.display = 'none';
       showGrid(selectedMotor);
+      
       await fetch('https://cwywwww.onrender.com/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ data: selectedMotor })
       });
     }
+    
+    let doneInterval;
+
+function startDoneAnimation() {
+  const doneImages = ['done1.png', 'done2.png', 'done3.png'];
+  let index = 0;
+  const img = document.getElementById('doneAnimation');
+  if (!img) return;
+
+  doneInterval = setInterval(() => {
+    img.src = doneImages[index];
+    index = (index + 1) % doneImages.length;
+  }, 1000); // 每 1 秒切換
+}
+
+function stopDoneAnimation() {
+  clearInterval(doneInterval);
+}
     function showGrid(motorKey) {
   currentMotorKey = motorKey;
   const eatenMotors = ['motor11', 'motor12', 'motor14', 'motor16'];
+ 
+ 
 
   // 顯示或隱藏確認按鈕
   if (eatenMotors.includes(motorKey)) {
@@ -486,11 +547,14 @@ for (let r = 1; r <= 4; r++) {
 
   document.getElementById('pickupText').textContent = `請查收您的餐點，取餐位置為：${row}-${col}`;
   document.getElementById('grid').style.display = 'block';
+  startProgressBarAnimation('star04.png', 'star05.png');
 
   // 只有一般 motor 才自動進入「謝謝您的購買」
   if (!eatenMotors.includes(motorKey)) {
     setTimeout(() => {
       document.getElementById('grid').style.display = 'none';
+      
+ 
       startThankImageLoop();
       document.getElementById('thanks').style.display = 'block';
     }, 7000);
@@ -526,6 +590,8 @@ for (let r = 1; r <= 4; r++) {
         }
       });
     }
+ 
+
     let thankAnimationInterval;
 
 function startThankImageLoop() {
@@ -566,7 +632,24 @@ function confirmAndShowEaten() {
 
   // 停止圖片輪播
   clearInterval(thankAnimationInterval);
+  clearInterval(progressInterval); // 停止動畫
+  
 }
+let progressInterval;
+
+function startProgressBarAnimation(from, to, targetId = 'progressBar') {
+  clearInterval(progressInterval);
+  const target = document.getElementById(targetId);
+  const frames = [from, to];
+  let index = 0;
+
+  progressInterval = setInterval(() => {
+    if (target) target.src = frames[index];
+    index = (index + 1) % frames.length;
+  }, 500);
+}
+
+
 
   </script>
 </body>

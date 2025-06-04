@@ -177,12 +177,18 @@
     <button class="confirm" onclick="confirmDelivery()">確認收餐</button>
   </div>
   <div id="grid">
+    <div id="queueStatus" style="font-weight:bold; margin-bottom:1rem;">
+      目前排隊中：0 位
+    </div>
+  
     <table id="gridTable"></table>
+  
     <p id="pickupText">請查收您的餐點，取餐位置為：</p>
-    <button id="confirmLocationBtn" class="confirm" style="display: none;" onclick="confirmAndShowEaten()">啊怎麼只有燈在閃</button>
- 
-
+    <button id="confirmLocationBtn" class="confirm" style="display: none;" onclick="confirmAndShowEaten()">
+      啊怎麼只有燈在閃
+    </button>
   </div>
+  
   <div id="thanks">
     <img id="thankImage" src="thank.png" alt="感謝圖片"
     style="width: 38vw; max-width: 285px; margin-top: 1rem;">
@@ -258,24 +264,10 @@
       ],
       青茶: [
       { label: '小辣', motor: 'motor14' },
-        { label: '中辣', motor: 'motor15' },
+        { label: '林當宏', motor: 'motor15' },
         { label: '大辣', motor: 'motor16' },
       ],
-      我腐: [
-        { label: '附湯', motor: 'motor9' },
-        { label: '不附湯', motor: 'motor10' }
-      ],
-      火腐: [
-        { label: '小辣', motor: 'motor11' },
-        { label: '中辣', motor: 'motor12' },
-        { label: '大辣', motor: 'motor13' },
-      ],
-      檸茶: [
-      { label: '小辣', motor: 'motor14' },
-        { label: '中辣', motor: 'motor15' },
-        { label: '大辣', motor: 'motor16' },
-        { label: '大大辣', motor: 'motor15' },
-      ],
+      
     };
 
     const lockStatus = {};
@@ -505,6 +497,21 @@ startAnimationSequence(() => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ data: selectedMotor })
       });
+      const result = await res.json();
+      setInterval(async () => {
+  if (selectedMotor) {
+    try {
+      const res = await fetch(`https://cwywwww.onrender.com/status?motor=${selectedMotor}`);
+      const result = await res.json();
+      if (result.position) {
+        const queueText = `目前排隊中：第 ${result.position} 位，約 ${(result.position - 1) * 2} 秒後執行`;
+        document.getElementById('queueStatus').textContent = queueText;
+      }
+    } catch (e) {
+      console.error("更新排隊狀態時發生錯誤：", e);
+    }
+  }
+}, 2000);  // ⏱️ 每 2 秒更新一次
     }
     
     let doneInterval;
@@ -588,7 +595,7 @@ for (let r = 1; r <= 4; r++) {
       
     startProgressBarAnimation('star05.png', 'star06.png'); // ✅ 加在這裡
     showStarBar(); // 如果你要讓白色背景條一起顯示
-    }, 7000);
+    }, 10000);
   }
 }
 

@@ -177,18 +177,12 @@
     <button class="confirm" onclick="confirmDelivery()">確認收餐</button>
   </div>
   <div id="grid">
-    <div id="queueStatus" style="font-weight:bold; margin-bottom:1rem;">目前排隊中：0 位</div>
-
-    </div>
-  
     <table id="gridTable"></table>
-  
     <p id="pickupText">請查收您的餐點，取餐位置為：</p>
-    <button id="confirmLocationBtn" class="confirm" style="display: none;" onclick="confirmAndShowEaten()">
-      啊怎麼只有燈在閃
-    </button>
+    <button id="confirmLocationBtn" class="confirm" style="display: none;" onclick="confirmAndShowEaten()">啊怎麼只有燈在閃</button>
+ 
+
   </div>
-  
   <div id="thanks">
     <img id="thankImage" src="thank.png" alt="感謝圖片"
     style="width: 38vw; max-width: 285px; margin-top: 1rem;">
@@ -497,23 +491,7 @@ startAnimationSequence(() => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ data: selectedMotor })
       });
-      const result = await res.json();
-     }
-
-     function updateQueueDisplay() {
-  fetch('https://cwywwww.onrender.com/queue-length')
-    .then(res => res.json())
-    .then(data => {
-      const div = document.getElementById('queueStatus');
-      if (div) {
-        div.innerText = `目前排隊中：${data.length} 位`;
-      }
-    });
-}
-
-// 每兩秒更新一次顯示
-setInterval(updateQueueDisplay, 2000);
-
+    }
     
     let doneInterval;
 
@@ -596,7 +574,7 @@ for (let r = 1; r <= 4; r++) {
       
     startProgressBarAnimation('star05.png', 'star06.png'); // ✅ 加在這裡
     showStarBar(); // 如果你要讓白色背景條一起顯示
-    }, 10000);
+    }, 7000);
   }
 }
 

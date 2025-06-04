@@ -53,10 +53,17 @@
     .centered-screen {
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
   align-items: center;
-  min-height: 100vh;
-  padding: 5vh 1rem;
-  text-align: center;
+  height: 100vh;
+  padding-top: 25vh;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .centered-screen {
+    padding-top: 35vh;  /* 手機調整版 */
+  }
 }
 
 
@@ -101,15 +108,8 @@
   background: #fdf6ec;
   cursor: pointer;
 }
-.centered-screen {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;  /* ✅ 改為靠上 */
-  align-items: center;
-  text-align: center;
-  height: 100vh;
-  padding-top: 15vh; /* ✅ 加點上邊距讓文字往下、看起來舒服 */
-}
+ 
+
 .order-btn {
   display: flex;
   flex-direction: column;
@@ -129,6 +129,43 @@
   object-fit: contain;
   pointer-events: none;
 }
+
+.label {
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-bottom: 0.75rem;
+  width: 100%;
+  color: white; /* 根據背景調整 */
+}
+.section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 300px;
+}
+
+
+.section button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: normal;
+  word-break: break-word;
+  padding: 0.8rem 1rem;
+  background: white;
+  border-radius: 0.75rem;
+  border: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 220px;
+  min-height: 80px;
+}
+
 
 
 
@@ -153,7 +190,7 @@
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1.5rem;
   padding: 3rem;
-  background: 	#2F0000;
+  background: 		#613030;
   min-height: 100vh;
   align-items: center;
   justify-items: center;
@@ -187,6 +224,7 @@
   padding: 0.5rem;
   z-index: 99;
 }
+
 
 
     #grid table { width: 100%; max-width: 300px; margin: 1rem auto; border-collapse: collapse; }
@@ -226,7 +264,7 @@
 
 /* 美化 menu 區域的大選項外框與間距 */
 #menu .section {
-  border: 1px solid 	#4D0000;           /* 細黑框 */
+  border: 1px solid 	#000;           /* 細黑框 */
   border-radius: 10px;
   padding: 1rem;
   background: #fff;
@@ -235,7 +273,7 @@
   font-family: 'Noto Sans TC', sans-serif; /* 美化字體 */
 }
 #menu .section {
-  border: 1px solid 	#4D0000;
+  border: 1px solid 	#000;
   border-radius: 10px;
   padding: 1rem;
   background: 		#DEDEBE;
@@ -253,8 +291,17 @@
   font-size: 1.4rem;
   font-weight: 700;
   margin-bottom: 1rem;
-  color: #333;
+  color: #000;
 }
+#introText4b {
+  font-size: 1.5rem;
+  margin-bottom: 2rem; /* ✅ 避免被下方擠到 */
+}
+#menuContent {
+  font-size: 1rem; /* ✅ 調整這個數值變小，例如 0.9rem 或 0.8rem */
+}
+
+
 
 /* 每個項目按鈕風格美化 */
 .item-buttons button {
@@ -282,20 +329,23 @@
   <!-- 開場頁面們 -->
 <div id="intro1" class="centered-screen" style="display: flex;">
   <p id="introText1">今天你一時興起去爬山，但是遇上了大暴雨。</p>
+  <div style="flex-grow: 0.3;"></div>
   <p class="continue" id="continue1" style="color: gray; display: none;">點擊繼續</p>
 </div>
 
 <div id="intro2" class="centered-screen" style="display: none;">
   <p id="introText2">好不容易找到可以躲雨的地方，你走了進去，看到一扇門。</p>
+  <div style="flex-grow: 0.3;"></div>
   <p class="continue" id="continue2" style="color: gray; display: none;">點擊繼續</p>
 </div>
 
 <div id="intro3" class="centered-screen" style="display: none;">
   <p id="introText3">門上面有一個QR code，你掃了進去。</p>
   <p id="introText3b" style="display:none;">
-    <span id="kata">「喀噠————」</span><br>
+    <span id="kata">「喀噠————」</span>
     <span id="doorOpened" style="display: none;">門開了。</span>
   </p>
+  <div style="flex-grow:  0.3;"></div>
   <p class="continue" id="continue3" style="color: gray; display: none;">點擊繼續</p>
   
 </div>
@@ -303,11 +353,13 @@
 <div id="intro4" class="centered-screen" style="display: none;">
   <p id="introText4">手機上出現了一行字————</p>
   <p id="introText4b" style="font-size: 1.5rem; display:none;">我等你很久了。</p>
+  <div style="flex-grow:  0.3;"></div>
   <p class="continue" id="continue4" style="color: gray; display: none;">點擊繼續</p>
 </div>
 
 <div id="intro5" class="centered-screen" style="display: none;">
   <p id="introText5">現在有16個選項，請慎重選擇你現在最需要的東西。</p>
+  <div style="flex-grow: 0.3;"></div>
   <p class="continue" id="continue5" style="color: gray; display: none;">點擊繼續</p>
 </div>
 
@@ -423,30 +475,30 @@
 
     const menuData = {
       任意門: [
-        { label: '總統豪華單間(一年份)', motor: 'motor1' },//膠囊
-        { label: '南國(The kingdom of Heaven)', motor: 'motor6' },//紅豆
-        { label: '巴爾幹半幹堡', motor: 'motor9' },//沙子
-        { label: '義大利半島', motor: 'motor5' }//空閃
+        { label:'總統豪華單間(一年份)', motor: 'motor1' },//膠囊
+        { label:'南國(The kingdom of Heaven)', motor: 'motor6' },//紅豆
+        { label:'巴爾幹半幹堡', motor: 'motor9' },//沙子
+        { label:'義大利半島', motor: 'motor5' }//空閃
       ],
       得力的助手: [
-        { label: '芳心縱火犯', motor: 'motor3' },//鈕扣
-        { label: '比爾蓋茲', motor: 'motor11' },//空閃
-        { label: '柯南', motor: 'motor8' }//足球巧克力
+        { label:'芳心縱火犯', motor: 'motor3' },//鈕扣
+        { label:'比爾蓋茲', motor: 'motor11' },//空閃
+        { label:'柯南', motor: 'motor8' }//足球巧克力
       ],
       潘朵拉的盒子: [
-        { label: '嘿嘿', motor: 'motor12' },//空閃
-        { label: '臭臭', motor: 'motor2' },//咖啡豆
-        { label: '香香', motor: 'motor13' }//香香豆
+        { label:'嘿嘿', motor: 'motor12' },//空閃
+        { label:'臭臭', motor: 'motor2' },//咖啡豆
+        { label:'香香', motor: 'motor13' }//香香豆
       ],
       核彈等級: [
-        { label: '大核彈', motor: 'motor4' },//彈力球
-        { label: '中核彈', motor: 'motor14' },//空閃
-        { label: '小核彈', motor: 'motor7' }//瓜子
+        { label:'大核彈', motor: 'motor4' },//彈力球
+        { label:'中核彈', motor: 'motor14' },//空閃
+        { label:'小核彈', motor: 'motor7' }//瓜子
       ],
       走一個陪伴: [
-        { label: '喜德', motor: 'motor10',img:'ti.jpg' },//松果
-        { label: '林當宏', motor: 'motor15' ,img:'Lin.jpg'},//鈴鐺紅
-        { label: '細菌人', motor: 'motor16',img:'orrr.jpg' }//空閃
+        { label:'喜德', motor: 'motor10',img:'ti.jpg' },//松果
+        { label:'林當宏', motor: 'motor15' ,img:'Lin.jpg'},//鈴鐺紅
+        { label:'細菌人', motor: 'motor16',img:'orrr.jpg' }//空閃
       ],
       
     };

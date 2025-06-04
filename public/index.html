@@ -61,6 +61,15 @@
 .bodyOffset {
   padding-top: 60px; /* 跟上面 starProgressContainer 高度一致 */
 }
+.fade-in {
+  animation: fadeIn 1s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 
     }
     #map, #grid, #delivered, #thanks { display: none; text-align: center; }
@@ -121,11 +130,59 @@
   max-width: 90vw;
   height: auto;
 }
+#introText3,
+#introText3 {
+  display: block;
+  opacity: 1;
+}
+
+
+#kata {
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+#introText4, #introText4b {
+  transition: opacity 0.5s ease;
+}
+
+
 
 
   </style>
 </head>
 <body>
+  <!-- 開場頁面們 -->
+<div id="intro1" class="centered-screen" style="display: flex;">
+  <p id="introText1">今天你一時興起去爬山，但是遇上了大暴雨。</p>
+  <p id="continue1" style="color: gray; display: none;">點擊繼續</p>
+</div>
+
+<div id="intro2" class="centered-screen" style="display: none;">
+  <p id="introText2">好不容易找到可以躲雨的地方，你走了進去，看到一扇門。</p>
+  <p id="continue2" style="color: gray; display: none;">點擊繼續</p>
+</div>
+
+<div id="intro3" class="centered-screen" style="display: none;">
+  <p id="introText3">門上面有一個QR code，你掃了進去。</p>
+  <p id="introText3b" style="display:none;">
+    <span id="kata">「喀噠————」</span><br>
+    <span id="doorOpened" style="display: none;">門開了。</span>
+  </p>
+  <p id="continue3" style="color: gray; display: none;">點擊繼續</p>
+  
+</div>
+
+<div id="intro4" class="centered-screen" style="display: none;">
+  <p id="introText4">手機上出現了一行字————</p>
+  <p id="introText4b" style="font-size: 1.5rem; display:none;">我等你很久了。</p>
+  <p id="continue4" style="color: gray; display: none;">點擊繼續</p>
+</div>
+
+<div id="intro5" class="centered-screen" style="display: none;">
+  <p id="introText5">現在有16個選項，請慎重選擇你現在最需要的東西。</p>
+  <p id="continue5" style="color: gray; display: none;">點擊繼續</p>
+</div>
+
   <div id="starProgressContainer" style="
   width: 100%;
   height: 60px;              /* ← 白色條的高度 */
@@ -141,7 +198,10 @@
 </div>
 
 
-  <div id="menu" class="menu"></div>
+<div id="menu" class="menu" style="display:none;">
+  <!-- 只有分類與按鈕區 -->
+</div>
+
 
   <div id="map">
 <!-- 滿版背景動畫圖 -->
@@ -174,7 +234,7 @@
     <img id="deliveredAnimation" src="done1.png"
     style="max-width: 35vw; height: auto; margin-top: 1rem;" />
     <p></p>
-    <button class="confirm" onclick="confirmDelivery()">確認收餐</button>
+    <button class="confirm" onclick="confirmDelivery()">前往收餐</button>
   </div>
   <div id="grid">
     <table id="gridTable"></table>
@@ -188,7 +248,8 @@
     style="width: 38vw; max-width: 285px; margin-top: 1rem;">
 
     <p>謝謝您的購買！</p>
-    <button class="confirm" onclick="goBackHome()">回首頁</button>
+    <button onclick="goBackHome()">回首頁</button>
+
    
     
   </div>
@@ -197,7 +258,7 @@
 
     <p>十分抱歉，您的外賣被外送員吃掉了</p>
     <p>他說蠻好吃的</p>
-    <button onclick="location.reload()">回首頁</button>
+    <button onclick="goBackHome()">回首頁</button>
   </div>
   
   
@@ -233,33 +294,31 @@
     }
 
     const menuData = {
-      火豆腐: [
-        { label: '小辣', motor: 'motor1' },
-        { label: '中辣', motor: 'motor2' },
-        { label: '大辣', motor: 'motor3' }
+      任意門: [
+        { label: '總統豪華單間(一年份)', motor: 'motor1' },//膠囊
+        { label: '南國(The kingdom of Heaven)', motor: 'motor6' },//紅豆
+        { label: '巴爾幹半幹堡', motor: 'motor9' },//沙子
+        { label: '義大利半島', motor: 'motor5' }//空閃
       ],
-      青清檸茶: [
-        { label: '微糖', motor: 'motor4' },
-        { label: '半糖', motor: 'motor5' },
-        { label: '全糖', motor: 'motor6' }
+      得力的助手: [
+        { label: '芳心縱火犯', motor: 'motor3' },//鈕扣
+        { label: '比爾蓋茲', motor: 'motor11' },//空閃
+        { label: '柯南', motor: 'motor8' }//足球巧克力
       ],
-      粒子豆腐: [
-        { label: '附湯', motor: 'motor7' },
-        { label: '不附湯', motor: 'motor8' },
+      潘朵拉的盒子: [
+        { label: '嘿嘿', motor: 'motor12' },//空閃
+        { label: '臭臭', motor: 'motor2' },//咖啡豆
+        { label: '香香', motor: 'motor13' }//香香豆
       ],
-      我豆腐: [
-        { label: '附湯', motor: 'motor9' },
-        { label: '不附湯', motor: 'motor10' }
+      核彈等級: [
+        { label: '大核彈', motor: 'motor4' },//彈力球
+        { label: '中核彈', motor: 'motor14' },//空閃
+        { label: '小核彈', motor: 'motor7' }//瓜子
       ],
-      豆腐: [
-        { label: '小辣', motor: 'motor11' },
-        { label: '中辣', motor: 'motor12' },
-        { label: '大辣', motor: 'motor13' },
-      ],
-      青茶: [
-      { label: '小辣', motor: 'motor14' },
-        { label: '林當宏', motor: 'motor15' },
-        { label: '大辣', motor: 'motor16' },
+      走一個陪伴: [
+        { label: '喜德', motor: 'motor10' },//松果
+        { label: '林當宏', motor: 'motor15' },//鈴鐺紅
+        { label: '細菌人', motor: 'motor16' }//空閃
       ],
       
     };
@@ -646,23 +705,25 @@ function confirmAndShowEaten() {
     }
 
     function goBackHome() {
+  // 隱藏所有可能會出現的畫面
   document.getElementById('thanks').style.display = 'none';
+  document.getElementById('eatenEnding').style.display = 'none';
+  document.getElementById('preDelivery').style.display = 'none';
+  document.getElementById('map').style.display = 'none';
+  document.getElementById('grid').style.display = 'none';
+
+  // 顯示選項首頁
   document.getElementById('menu').style.display = 'block';
+
+  // 停掉進度條動畫、清除圖片
   document.getElementById('starProgressContainer').style.display = 'none';
-document.getElementById('progressBar').src = '';
-
-
+  document.getElementById('progressBar').src = '';
   hideStarBar();
 
-
   clearInterval(thankAnimationInterval);
-  clearInterval(progressInterval); // 停止 star05-06 動畫
-  hideStarBar(); // ✅ 隱藏白色條
-
-  // ✅ 清空進度條圖片，避免卡住 star06 畫面
-  const bar = document.getElementById('progressBar');
-  if (bar) bar.src = '';
+  clearInterval(progressInterval);
 }
+
 let progressInterval;
 
 function startProgressBarAnimation(from, to, targetId = 'progressBar') {
@@ -680,5 +741,128 @@ function startProgressBarAnimation(from, to, targetId = 'progressBar') {
 
 
   </script>
+  <script>
+    window.onload = () => {
+      setTimeout(() => document.getElementById('continue1').style.display = 'block', 2000);
+    };
+    
+    document.getElementById('intro1').addEventListener('click', () => {
+      document.getElementById('intro1').style.display = 'none';
+      document.getElementById('intro2').style.display = 'flex';
+      setTimeout(() => document.getElementById('continue2').style.display = 'block', 2000);
+    });
+    
+    document.getElementById('intro2').addEventListener('click', () => {
+  document.getElementById('intro2').style.display = 'none';
+  document.getElementById('intro3').style.display = 'flex';
+
+  // 顯示 QR code 那句，0.8 秒後開始淡出
+  setTimeout(() => {
+    const qr = document.getElementById('introText3');
+    qr.style.transition = 'opacity 0.3s ease';
+    qr.style.opacity = 0;
+
+    // 淡出完畢後顯示「喀噠」
+    setTimeout(() => {
+      qr.style.display = 'none';
+
+      const kata = document.getElementById('kata');
+      const door = document.getElementById('doorOpened');
+
+      const fullLine = document.getElementById('introText3b');
+      fullLine.style.display = 'block';
+      fullLine.style.opacity = 1;
+
+      // 初始化「喀噠」淡入
+      kata.style.opacity = 0;
+      kata.style.display = 'inline';
+      kata.style.transition = 'opacity 1s ease';
+
+      // 執行「喀噠」淡入
+      requestAnimationFrame(() => {
+        kata.style.opacity = 1;
+      });
+
+      // 當「喀噠」淡入結束後（1秒），顯示「門開了」
+      setTimeout(() => {
+        door.style.display = 'inline';
+      }, 2800); // 跟喀噠淡入的 1s 同步
+
+      // 然後再等 2 秒，顯示「點擊繼續」
+      setTimeout(() => {
+        document.getElementById('continue3').style.display = 'block';
+      }, 5500);
+
+    }, 300);
+  }, 2500);
+});
+
+
+
+
+document.getElementById('intro3').addEventListener('click', () => {
+  document.getElementById('intro3').style.display = 'none';
+  document.getElementById('intro4').style.display = 'flex';
+  document.getElementById('continue4').addEventListener('click', () => {
+  document.getElementById('intro4').style.display = 'none';
+  document.getElementById('intro5').style.display = 'flex';
+  setTimeout(() => {
+    document.getElementById('continue5').style.display = 'block';
+  }, 2000);
+  document.getElementById('continue5').addEventListener('click', () => {
+    document.getElementById('intro5').addEventListener('click', () => {
+  document.getElementById('intro5').style.display = 'none';
+  document.getElementById('menu').style.display = 'block';
+
+  
+});
+
+});
+
+
+  // ✅ 顯示 menu 的點擊繼續按鈕
+  document.getElementById('continueMenu').style.display = 'block';
+});
+
+
+
+
+  const text = document.getElementById('introText4');
+  const textB = document.getElementById('introText4b');
+  const continueBtn = document.getElementById('continue4');
+
+  text.style.display = 'block';
+  text.style.opacity = 1;
+
+  setTimeout(() => {
+    text.style.transition = 'opacity 0.5s ease';
+    text.style.opacity = 0;
+
+    setTimeout(() => {
+      text.style.display = 'none';
+
+      textB.style.display = 'block';
+      textB.style.fontSize = '1.5em';
+      textB.style.opacity = 0;
+      textB.style.transition = 'opacity 1s ease';
+
+      requestAnimationFrame(() => {
+        textB.style.opacity = 1;
+      });
+
+      // ✅ 顯示按鈕，確保點得到
+      setTimeout(() => {
+        continueBtn.style.display = 'block';
+        continueBtn.style.zIndex = 9999;
+        continueBtn.style.cursor = 'pointer';
+      }, 2000);
+
+    }, 600);
+  }, 1500);
+});
+
+
+    </script>
+    
 </body>
 </html>

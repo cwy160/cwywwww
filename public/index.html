@@ -49,6 +49,7 @@
       margin-top: 1rem;
       padding: 0.5rem;
       font-size: 1rem;
+    }
     .centered-screen {
   display: flex;
   flex-direction: column;
@@ -64,6 +65,65 @@
 .fade-in {
   animation: fadeIn 1s ease-in-out;
 }
+.continue {
+  margin-top: 2rem;      /* 明確留距離 */
+  font-size: 1rem;
+  color: gray;
+  text-align: center;
+  cursor: pointer;
+  line-height: 1.5;
+}
+.menu-option {
+  padding: 1.5rem;
+  margin: 1rem;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  font-size: 1.2rem;
+  font-family: 'Noto Sans TC', sans-serif;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  color: #333;
+  border: 1px solid #e0e0e0;
+}
+
+.menu-option:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 25px rgba(0,0,0,0.15);
+  background: #fdf6ec;
+  cursor: pointer;
+}
+.centered-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* ✅ 改為靠上 */
+  align-items: center;
+  text-align: center;
+  height: 100vh;
+  padding-top: 15vh; /* ✅ 加點上邊距讓文字往下、看起來舒服 */
+}
+.order-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  text-align: center;
+  padding: 0.6rem;
+  border-radius: 6px;
+  background: #f9f9f9;
+  border: 1px solid #ccc;
+}
+
+.order-btn .item-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+
+
 
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -71,7 +131,7 @@
 }
 
 
-    }
+    
     #map, #grid, #delivered, #thanks { display: none; text-align: center; }
     #map {
   position: relative;
@@ -80,6 +140,17 @@
   background: linear-gradient(#e0f7fa, #b2ebf2); /* 保留 */
   overflow: hidden;
 }
+#menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1.5rem;
+  padding: 3rem;
+  background: linear-gradient(to bottom, #f7f7f7, #ececec);
+  min-height: 100vh;
+  align-items: center;
+  justify-items: center;
+}
+
 
     #courier {
       width: 20px; height: 20px; border-radius: 50%; background: red;
@@ -145,6 +216,55 @@
   transition: opacity 0.5s ease;
 }
 
+/* 美化 menu 區域的大選項外框與間距 */
+#menu .section {
+  border: 1px solid #444;           /* 細黑框 */
+  border-radius: 10px;
+  padding: 1rem;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+  font-family: 'Noto Sans TC', sans-serif; /* 美化字體 */
+}
+#menu .section {
+  border: 1px solid #444;
+  border-radius: 10px;
+  padding: 1rem;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  font-family: 'Noto Sans TC', sans-serif;
+  margin: 0.8rem;               /* ✅ 關鍵：每個黑框外圍加間距 */
+  width: 100%;                  /* ✅ 避免撐爆 grid */
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+
+/* 大分類標題字美化 */
+#menu .label {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+/* 每個項目按鈕風格美化 */
+.item-buttons button {
+  margin: 0.3rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #bbb;
+  background-color: #fafafa;
+  font-size: 1rem;
+  font-family: 'Noto Sans TC', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.item-buttons button:hover {
+  background-color: #f2f2f2;
+  border-color: #888;
+}
 
 
 
@@ -154,12 +274,12 @@
   <!-- 開場頁面們 -->
 <div id="intro1" class="centered-screen" style="display: flex;">
   <p id="introText1">今天你一時興起去爬山，但是遇上了大暴雨。</p>
-  <p id="continue1" style="color: gray; display: none;">點擊繼續</p>
+  <p class="continue" id="continue1" style="color: gray; display: none;">點擊繼續</p>
 </div>
 
 <div id="intro2" class="centered-screen" style="display: none;">
   <p id="introText2">好不容易找到可以躲雨的地方，你走了進去，看到一扇門。</p>
-  <p id="continue2" style="color: gray; display: none;">點擊繼續</p>
+  <p class="continue" id="continue2" style="color: gray; display: none;">點擊繼續</p>
 </div>
 
 <div id="intro3" class="centered-screen" style="display: none;">
@@ -168,19 +288,19 @@
     <span id="kata">「喀噠————」</span><br>
     <span id="doorOpened" style="display: none;">門開了。</span>
   </p>
-  <p id="continue3" style="color: gray; display: none;">點擊繼續</p>
+  <p class="continue" id="continue3" style="color: gray; display: none;">點擊繼續</p>
   
 </div>
 
 <div id="intro4" class="centered-screen" style="display: none;">
   <p id="introText4">手機上出現了一行字————</p>
   <p id="introText4b" style="font-size: 1.5rem; display:none;">我等你很久了。</p>
-  <p id="continue4" style="color: gray; display: none;">點擊繼續</p>
+  <p class="continue" id="continue4" style="color: gray; display: none;">點擊繼續</p>
 </div>
 
 <div id="intro5" class="centered-screen" style="display: none;">
   <p id="introText5">現在有16個選項，請慎重選擇你現在最需要的東西。</p>
-  <p id="continue5" style="color: gray; display: none;">點擊繼續</p>
+  <p class="continue" id="continue5" style="color: gray; display: none;">點擊繼續</p>
 </div>
 
   <div id="starProgressContainer" style="
@@ -316,9 +436,9 @@
         { label: '小核彈', motor: 'motor7' }//瓜子
       ],
       走一個陪伴: [
-        { label: '喜德', motor: 'motor10' },//松果
-        { label: '林當宏', motor: 'motor15' },//鈴鐺紅
-        { label: '細菌人', motor: 'motor16' }//空閃
+        { label: '喜德', motor: 'motor10',img:'ti.jpg' },//松果
+        { label: '林當宏', motor: 'motor15' ,img:'Lin.jpg'},//鈴鐺紅
+        { label: '細菌人', motor: 'motor16',img:'orrr.jpg' }//空閃
       ],
       
     };
@@ -358,7 +478,12 @@ setInterval(debounceSyncLockStatus, 1000);
       section.innerHTML = `<div class="label">${label}</div>
         <div class="details">
           <div class="item-buttons">
-            ${items.map(i => `<button class="order-btn" data-motor="${i.motor}" onclick="prepareDelivery('${i.motor}')">${i.label}</button>`).join('')}
+            ${items.map(i => `
+  <button class="order-btn" data-motor="${i.motor}" onclick="prepareDelivery('${i.motor}')">
+    ${i.img ? `<img src="${i.img}" class="item-img" alt="">` : ''}
+    ${i.label}
+  </button>
+`).join('')}
           </div>
           <div class="locked-message" style="display:none;">該選項已售罄，請稍後補貨</div>
           <button class="back-button" onclick="goBack()">返回上一頁</button>
@@ -791,7 +916,7 @@ function startProgressBarAnimation(from, to, targetId = 'progressBar') {
       // 然後再等 2 秒，顯示「點擊繼續」
       setTimeout(() => {
         document.getElementById('continue3').style.display = 'block';
-      }, 5500);
+      }, 4500);
 
     }, 300);
   }, 2500);

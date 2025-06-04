@@ -53,11 +53,13 @@
     .centered-screen {
   display: flex;
   flex-direction: column;
-  justify-content: center; /* 垂直置中 */
-  align-items: center;     /* 水平置中 */
+  align-items: center;
+  min-height: 100vh;
+  padding: 5vh 1rem;
   text-align: center;
-  height: 100vh;           /* 填滿整個螢幕高度 */
 }
+
+
 
 .bodyOffset {
   padding-top: 60px; /* 跟上面 starProgressContainer 高度一致 */
@@ -65,14 +67,20 @@
 .fade-in {
   animation: fadeIn 1s ease-in-out;
 }
+.centered-screen .text {
+  margin-bottom: auto;
+  font-size: 1.25rem;
+}
 .continue {
-  margin-top: 2rem;      /* 明確留距離 */
+  margin-top: 2rem;  /* 比 5rem 小，適合手機 */
+  margin-bottom: 3vh;         /* 保底部距離 */
   font-size: 1rem;
   color: gray;
   text-align: center;
   cursor: pointer;
   line-height: 1.5;
 }
+
 .menu-option {
   padding: 1.5rem;
   margin: 1rem;
@@ -96,7 +104,7 @@
 .centered-screen {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* ✅ 改為靠上 */
+  justify-content: center;  /* ✅ 改為靠上 */
   align-items: center;
   text-align: center;
   height: 100vh;
@@ -145,7 +153,7 @@
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1.5rem;
   padding: 3rem;
-  background: linear-gradient(to bottom, #f7f7f7, #ececec);
+  background: 	#2F0000;
   min-height: 100vh;
   align-items: center;
   justify-items: center;
@@ -218,7 +226,7 @@
 
 /* 美化 menu 區域的大選項外框與間距 */
 #menu .section {
-  border: 1px solid #444;           /* 細黑框 */
+  border: 1px solid 	#4D0000;           /* 細黑框 */
   border-radius: 10px;
   padding: 1rem;
   background: #fff;
@@ -227,11 +235,11 @@
   font-family: 'Noto Sans TC', sans-serif; /* 美化字體 */
 }
 #menu .section {
-  border: 1px solid #444;
+  border: 1px solid 	#4D0000;
   border-radius: 10px;
   padding: 1rem;
-  background: #fff;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  background: 		#DEDEBE;
+  box-shadow: 0 5px 5px rgba(0,0,0,0.05);
   font-family: 'Noto Sans TC', sans-serif;
   margin: 0.8rem;               /* ✅ 關鍵：每個黑框外圍加間距 */
   width: 100%;                  /* ✅ 避免撐爆 grid */

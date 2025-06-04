@@ -177,8 +177,8 @@
     <button class="confirm" onclick="confirmDelivery()">確認收餐</button>
   </div>
   <div id="grid">
-    <div id="queueStatus" style="font-weight:bold; margin-bottom:1rem;">
-      目前排隊中：0 位
+    <div id="queueStatus" style="font-weight:bold; margin-bottom:1rem;">目前排隊中：0 位</div>
+
     </div>
   
     <table id="gridTable"></table>
@@ -498,21 +498,22 @@ startAnimationSequence(() => {
         body: JSON.stringify({ data: selectedMotor })
       });
       const result = await res.json();
-      setInterval(async () => {
-  if (selectedMotor) {
-    try {
-      const res = await fetch(`https://cwywwww.onrender.com/status?motor=${selectedMotor}`);
-      const result = await res.json();
-      if (result.position) {
-        const queueText = `目前排隊中：第 ${result.position} 位，約 ${(result.position - 1) * 2} 秒後執行`;
-        document.getElementById('queueStatus').textContent = queueText;
+     }
+
+     function updateQueueDisplay() {
+  fetch('https://cwywwww.onrender.com/queue-length')
+    .then(res => res.json())
+    .then(data => {
+      const div = document.getElementById('queueStatus');
+      if (div) {
+        div.innerText = `目前排隊中：${data.length} 位`;
       }
-    } catch (e) {
-      console.error("更新排隊狀態時發生錯誤：", e);
-    }
-  }
-}, 2000);  // ⏱️ 每 2 秒更新一次
-    }
+    });
+}
+
+// 每兩秒更新一次顯示
+setInterval(updateQueueDisplay, 2000);
+
     
     let doneInterval;
 
